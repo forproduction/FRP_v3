@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FRP Production System</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --card: #0f1520;
+  --card2: #131c2a;
+  --muted: #6b7a8d;
+  --muted2: #8a97a6;
+  --accent: #00e5ff;
+  --accent2: #00ff9c;
+  --panel: #0c1118;
+  --border: rgba(0,229,255,0.08);
+  --border2: rgba(255,255,255,0.05);
+  --danger: #ff4560;
+  --warn: #fbbf24;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body,html{background:var(--bg);color:#e0e8f0;min-height:100%;font-family:var(--sans);}
+input,select,button{font-family:var(--sans);}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#1a2535;border-radius:3px}
+
+/* ===== LOGIN ===== */
+#login-overlay{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;
+}
+.login-box{
+  background:var(--card);padding:40px 48px;border-radius:16px;
+  border:1px solid var(--border);text-align:center;
+  box-shadow:0 0 60px rgba(0,229,255,0.08),0 20px 40px rgba(0,0,0,0.6);
+}
+.login-logo{font-family:var(--sans);font-size:32px;font-weight:800;
+  color:var(--accent);letter-spacing:4px;margin-bottom:8px;}
+.login-sub{font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:28px;}
+.login-box input{
+  background:#0a1525;border:1px solid var(--border);color:#fff;
+  padding:14px 16px;border-radius:8px;width:240px;text-align:center;
+  font-size:20px;margin-bottom:16px;outline:none;
+  font-family:var(--mono);letter-spacing:6px;
+  transition:border-color 0.2s;
+}
+.login-box input:focus{border-color:var(--accent);}
+.login-btn{
+  background:var(--accent);color:#000;border:none;
+  padding:12px 36px;border-radius:8px;font-weight:700;
+  font-size:14px;letter-spacing:2px;cursor:pointer;
+  transition:opacity 0.2s,transform 0.1s;width:100%;
+}
+.login-btn:hover{opacity:0.85;}
+.login-btn:active{transform:scale(0.98);}
+#login-error{color:var(--danger);font-size:12px;margin-top:12px;display:none;}
+
+/* ===== TOP NAV ===== */
+#topnav{
+  background:rgba(8,12,16,0.95);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;align-items:center;gap:0;
+  position:sticky;top:0;z-index:100;display:none;
+}
+.nav-brand{
+  font-family:var(--sans);font-size:18px;font-weight:800;
+  color:var(--accent);letter-spacing:3px;padding:16px 24px 16px 0;
+  border-right:1px solid var(--border);margin-right:16px;white-space:nowrap;
+}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{
+  background:transparent;color:var(--muted);border:none;
+  padding:16px 20px;font-size:13px;font-weight:600;
+  letter-spacing:1px;cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.2s;white-space:nowrap;
+}
+.nav-tab:hover{color:#fff;}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.btn-refresh{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  padding:7px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;
+  display:none;
+}
+.btn-refresh:hover{color:var(--accent);border-color:var(--accent);}
+#loading-bar{
+  position:fixed;top:0;left:0;height:2px;width:0%;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  z-index:9998;transition:width 0.3s;
+}
+
+/* ===== VIEWS ===== */
+.view{display:none;min-height:calc(100vh - 53px);}
+.view.active{display:block;}
+.wrap{max-width:1400px;margin:0 auto;padding:24px;}
+
+/* ===== SECTION TITLES ===== */
+.section-title{
+  font-size:11px;font-weight:700;letter-spacing:3px;
+  color:var(--accent);text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,var(--border),transparent);
+}
+
+/* ===== CARDS ===== */
+.metrics-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;margin-bottom:24px;
+}
+.metric-card{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:10px;padding:16px;
+  position:relative;overflow:hidden;
+}
+.metric-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+  opacity:0.4;
+}
+.metric-label{font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:600;margin-bottom:8px;}
+.metric-value{font-size:22px;font-weight:700;font-family:var(--mono);}
+.metric-unit{font-size:11px;color:var(--muted);margin-top:2px;}
+.v-accent{color:var(--accent);}
+.v-accent2{color:var(--accent2);}
+.v-danger{color:var(--danger);}
+.v-warn{color:var(--warn);}
+
+/* ===== CONTROL PANEL ===== */
+.ctrl-panel{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;margin-bottom:24px;
+  display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;
+}
+.ctrl-group{display:flex;flex-direction:column;gap:6px;}
+.ctrl-label{font-size:10px;letter-spacing:2px;color:var(--muted);font-weight:700;}
+.ctrl-row{display:flex;gap:8px;align-items:center;}
+.ctrl-panel input[type="date"],
+.ctrl-panel select{
+  background:#0a1525;color:#e0e8f0;color-scheme:dark;
+  border:1px solid rgba(255,255,255,0.1);
+  padding:9px 12px;border-radius:7px;
+  font-size:13px;outline:none;transition:border-color 0.2s;min-width:130px;
+}
+.ctrl-panel input[type="date"]:focus,
+.ctrl-panel select:focus{border-color:var(--accent);}
+.ctrl-panel select{cursor:pointer;}
+.btn-calc{
+  background:linear-gradient(135deg,var(--accent),#0091ff);
+  color:#000;border:none;padding:10px 28px;border-radius:7px;
+  font-weight:700;font-size:13px;letter-spacing:1px;
+  cursor:pointer;transition:opacity 0.2s,transform 0.1s;
+  white-space:nowrap;
+}
+.btn-calc:hover{opacity:0.85;}
+.btn-calc:active{transform:scale(0.97);}
+.btn-calc:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* ===== TABLE ===== */
+.table-wrap{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;margin-bottom:24px;
+}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);}
+thead th{
+  padding:12px 14px;font-size:10px;letter-spacing:2px;
+  color:var(--muted);font-weight:700;text-transform:uppercase;
+  background:rgba(0,229,255,0.03);border-bottom:1px solid var(--border);
+  text-align:right;
+}
+thead th:first-child{text-align:left;}
+tbody td{
+  padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.02);
+  font-size:13px;text-align:right;color:#c8d4e0;
+}
+tbody td:first-child{text-align:left;color:var(--accent);font-weight:700;}
+tbody tr:hover{background:rgba(0,229,255,0.02);}
+tbody tr.total-row td{
+  font-weight:700;color:#e0e8f0;
+  background:rgba(0,229,255,0.05);border-top:1px solid var(--border);
+}
+tbody tr.total-row td:first-child{color:var(--warn);}
+.danger-cell{color:var(--danger)!important;font-weight:600;}
+.ok-cell{color:var(--accent2)!important;}
+
+/* ===== DASH PRODUCT TABS ===== */
+.sub-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.sub-tab{
+  background:transparent;color:var(--muted);
+  border:1px solid var(--border2);
+  padding:7px 18px;border-radius:6px;font-size:12px;
+  font-weight:600;letter-spacing:1px;cursor:pointer;transition:0.2s;
+}
+.sub-tab:hover{color:#fff;border-color:rgba(255,255,255,0.2);}
+.sub-tab.active{background:rgba(0,229,255,0.1);color:var(--accent);border-color:var(--accent);}
+
+/* ===== CHARTS ===== */
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:20px;margin-bottom:24px;}
+.chart-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:20px;
+}
+.chart-title{font-size:11px;letter-spacing:2px;color:var(--muted);font-weight:700;margin-bottom:16px;}
+.chart-canvas-wrap{position:relative;height:280px;}
+.chart-canvas-wrap canvas{max-height:280px;}
+
+.charts-grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:24px;}
+
+/* ===== QUALITY SECTION ===== */
+.quality-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:800px){.quality-cards{grid-template-columns:repeat(2,1fr);}}
+
+/* ===== SAVE/HISTORY ===== */
+.save-bar{
+  background:rgba(0,229,255,0.05);border:1px solid var(--border);
+  border-radius:8px;padding:12px 16px;margin-bottom:20px;
+  display:none;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.save-bar input[type="text"]{
+  background:#0a1525;border:1px solid var(--border);color:#e0e8f0;
+  padding:8px 12px;border-radius:6px;font-size:13px;flex:1;min-width:200px;outline:none;
+}
+.save-bar input:focus{border-color:var(--accent);}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid;transition:0.2s;letter-spacing:1px;
+}
+.btn-save{background:rgba(0,255,156,0.1);color:var(--accent2);border-color:rgba(0,255,156,0.3);}
+.btn-save:hover{background:rgba(0,255,156,0.2);}
+.btn-skip{background:transparent;color:var(--muted);border-color:var(--border2);}
+.btn-skip:hover{color:#fff;}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(255,69,96,0.3);}
+.btn-danger:hover{background:rgba(255,69,96,0.1);}
+.btn-export{background:rgba(0,229,255,0.08);color:var(--accent);border-color:var(--border);}
+.btn-export:hover{background:rgba(0,229,255,0.15);}
+
+.history-section{margin-top:32px;}
+.history-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.history-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#fff;display:flex;align-items:center;gap:8px;}
+.badge{background:var(--accent);color:#000;font-size:10px;font-weight:800;
+  padding:2px 8px;border-radius:20px;font-family:var(--mono);}
+.history-table th{font-size:10px!important;}
+.history-table td{font-size:12px!important;}
+.btn-load-row{
+  background:transparent;color:var(--accent);border:1px solid rgba(0,229,255,0.2);
+  padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;transition:0.2s;
+}
+.btn-load-row:hover{background:rgba(0,229,255,0.1);}
+.btn-del-row{
+  background:transparent;color:var(--muted);border:none;
+  padding:3px 6px;font-size:13px;cursor:pointer;
+}
+.btn-del-row:hover{color:var(--danger);}
+.empty-msg{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+
+/* ===== MORE DETAIL ===== */
+.detail-result{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:24px;margin-top:20px;display:none;
+}
+.detail-value{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--accent);margin:8px 0;}
+.detail-sub{font-size:12px;color:var(--muted);}
+
+/* ===== LOADING STATE ===== */
+.loading-spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(0,229,255,0.2);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 0.7s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .wrap{padding:12px;}
+  .ctrl-panel{padding:16px;}
+  .quality-cards{grid-template-columns:repeat(2,1fr);}
+  .charts-grid,.charts-grid-4{grid-template-columns:1fr;}
+  .metrics-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-bar"></div>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">FRP</div>
+    <div class="login-sub">PRODUCTION MONITORING SYSTEM</div>
+    <input type="password" id="pass-input" placeholder="••••" maxlength="10"
+      onkeydown="if(event.key==='Enter')checkLogin()">
+    <br>
+    <button class="login-btn" onclick="checkLogin()">ACCESS SYSTEM</button>
+    <p id="login-error">Sai mật khẩu!</p>
+  </div>
+</div>
+
+<!-- TOP NAV -->
+<nav id="topnav">
+  <div class="nav-brand">FRP</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('v-dashboard',this)">📊 Dashboard 2026</button>
+    <button class="nav-tab" onclick="switchView('v-search',this)">🔍 Search</button>
+    <button class="nav-tab" onclick="switchView('v-detail',this)">🔬 More Detail</button>
+  </div>
+  <div class="nav-right">
+    <span id="data-status" style="font-size:11px;color:var(--muted);"></span>
+    <button class="btn-refresh admin-only" onclick="refreshDashboard()">↺ Refresh</button>
+  </div>
+</nav>
+
+<!-- ============================================================ -->
+<!-- DASHBOARD TAB -->
+<!-- ============================================================ -->
+<div id="v-dashboard" class="view active">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:2px;">DASHBOARD <span style="color:var(--accent);">2026</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="dash-update-info">Fetching data...</div>
+      </div>
+      <div class="sub-tabs" id="dash-product-tabs">
+        <button class="sub-tab active" onclick="switchDashProduct('total',this)">TOTAL</button>
+        <button class="sub-tab" onclick="switchDashProduct('v05',this)">CFF-V05</button>
+        <button class="sub-tab" onclick="switchDashProduct('v0302',this)">CFF-V03-02</button>
+      </div>
+    </div>
+
+    <div id="dash-content">
+      <!-- Table -->
+      <div id="dash-table-wrap" class="table-wrap">
+        <table id="dash-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;">MONTH</th>
+              <th>Qualified (kg)</th>
+              <th>UnQualified (kg)</th>
+              <th>Total Product (kg)</th>
+              <th>A Grade (%)</th>
+              <th>Total Waste (kg)</th>
+              <th>Waste (%)</th>
+            </tr>
+          </thead>
+          <tbody id="dash-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
+              <span class="loading-spinner"></span>Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid" id="dash-charts" style="display:none;">
+        <div class="chart-box">
+          <div class="chart-title">PRODUCTION VOLUME TREND (kg)</div>
+          <div class="chart-canvas-wrap"><canvas id="dash-chart-1"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">A-GRADE & WASTE % TREND</div>
+          <div class="chart-canvas-wrap"><canvas id="dash-chart-2"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SEARCH TAB -->
+<!-- ============================================================ -->
+<div id="v-search" class="view">
+  <div class="wrap">
+
+    <!-- Controls -->
+    <div class="ctrl-panel">
+      <div class="ctrl-group">
+        <div class="ctrl-label">START DATE</div>
+        <div class="ctrl-row">
+          <input type="date" id="s-start">
+          <select id="s-shift1">
+            <option value="A">Shift A</option>
+            <option value="B">Shift B</option>
+            <option value="1">Shift 1</option>
+            <option value="2">Shift 2</option>
+            <option value="3">Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">END DATE</div>
+        <div class="ctrl-row">
+          <input type="date" id="s-end">
+          <select id="s-shift2">
+            <option value="B">Shift B</option>
+            <option value="A">Shift A</option>
+            <option value="1">Shift 1</option>
+            <option value="2">Shift 2</option>
+            <option value="3">Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">LINE</div>
+        <select id="s-line">
+          <option value="All">All Lines</option>
+          <option value="NGR">NGR (V1)</option>
+          <option value="STA">STA (V2)</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">PRODUCT CODE</div>
+        <select id="s-product">
+          <option value="All">All Products</option>
+          <option value="CFF-V05">CFF-V05</option>
+          <option value="CFF-V03-02">CFF-V03-02</option>
+        </select>
+      </div>
+      <button class="btn-calc" id="s-calc-btn" onclick="runSearch()">▶ Calculate</button>
+    </div>
+
+    <!-- Production Results -->
+    <div id="s-production-section" style="display:none;">
+      <div class="section-title">PRODUCTION</div>
+      <div class="metrics-grid" id="s-prod-cards"></div>
+
+      <!-- Save bar -->
+      <div class="save-bar" id="s-save-bar">
+        <span style="font-size:12px;color:var(--muted2);white-space:nowrap;">Save result:</span>
+        <input type="text" id="s-note" placeholder="Note (optional)...">
+        <button class="btn-sm btn-save" onclick="saveSearchResult()">💾 Save</button>
+        <button class="btn-sm btn-skip" onclick="closeSaveBar()">Skip</button>
+      </div>
+
+      <!-- Charts row 1: material/additives pies + bar -->
+      <div class="section-title">BREAKDOWN</div>
+      <div class="charts-grid" id="s-charts-1">
+        <div class="chart-box">
+          <div class="chart-title">MATERIAL COMPOSITION</div>
+          <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-mat-pie"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">ADDITIVES COMPOSITION</div>
+          <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-add-pie"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">KEY PERFORMANCE INDICATORS</div>
+          <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-kpi-bar"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Quality -->
+      <div class="section-title">QUALITY AVERAGES</div>
+      <div class="quality-cards" id="s-quality-cards"></div>
+
+      <!-- IV, L, a, b hourly charts -->
+      <div class="section-title">QUALITY TREND (per sample)</div>
+      <div class="charts-grid-4" id="s-quality-charts">
+        <div class="chart-box">
+          <div class="chart-title">IV TREND</div>
+          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-iv"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">L* TREND</div>
+          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-l"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">a* TREND</div>
+          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-a"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">b* TREND</div>
+          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-b"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="history-hdr">
+        <div class="history-title">SEARCH HISTORY <span class="badge" id="hist-count">0</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" class="admin-only" id="hist-actions" style="display:none!important;">
+          <button class="btn-sm btn-export" onclick="exportHistory()">⬇ Export CSV</button>
+          <button class="btn-sm btn-danger" onclick="clearHistory()">🗑 Clear All</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="min-height:60px;">
+        <div id="hist-container"><div class="empty-msg">No saved searches yet.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MORE DETAIL TAB -->
+<!-- ============================================================ -->
+<div id="v-detail" class="view">
+  <div class="wrap">
+
+    <div style="font-size:20px;font-weight:800;letter-spacing:2px;margin-bottom:20px;">
+      MORE <span style="color:var(--accent);">DETAIL</span>
+    </div>
+
+    <div class="ctrl-panel">
+      <div class="ctrl-group">
+        <div class="ctrl-label">START DATE</div>
+        <div class="ctrl-row">
+          <input type="date" id="d-start">
+          <select id="d-shift1">
+            <option value="A">Shift A</option>
+            <option value="B">Shift B</option>
+            <option value="1">Shift 1</option>
+            <option value="2">Shift 2</option>
+            <option value="3">Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">END DATE</div>
+        <div class="ctrl-row">
+          <input type="date" id="d-end">
+          <select id="d-shift2">
+            <option value="B">Shift B</option>
+            <option value="A">Shift A</option>
+            <option value="1">Shift 1</option>
+            <option value="2">Shift 2</option>
+            <option value="3">Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">LINE</div>
+        <select id="d-line">
+          <option value="All">All Lines</option>
+          <option value="NGR">NGR (V1)</option>
+          <option value="STA">STA (V2)</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">PRODUCT CODE</div>
+        <select id="d-product">
+          <option value="All">All Products</option>
+          <option value="CFF-V05">CFF-V05</option>
+          <option value="CFF-V03-02">CFF-V03-02</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">TYPE</div>
+        <select id="d-type" onchange="updateDetailGroups()">
+          <option value="">-- Select --</option>
+          <option value="C">C (Count/bags)</option>
+          <option value="W">W (Weight/kg)</option>
+          <option value="T">T (Time)</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">GROUP</div>
+        <select id="d-group" onchange="updateDetailNames()">
+          <option value="">-- Select --</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">NAME</div>
+        <select id="d-name">
+          <option value="All">All</option>
+        </select>
+      </div>
+      <button class="btn-calc" id="d-calc-btn" onclick="runDetail()">▶ Calculate</button>
+    </div>
+
+    <div class="detail-result" id="detail-result">
+      <div id="detail-code" style="font-size:11px;letter-spacing:3px;color:var(--muted);font-weight:700;margin-bottom:4px;"></div>
+      <div class="detail-value" id="detail-val">—</div>
+      <div class="detail-sub" id="detail-sub"></div>
+      <div id="detail-breakdown" style="margin-top:20px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// CONFIG
+// ===================================================================
+const API_URL = "https://script.google.com/macros/s/AKfycbzrZ51M-fXhWJShajLj0YKY74iwvg1G1ovUmb2tVgI0Xy7C0hHtouTLLgXMEhixIR8HHg/exec";
+const CACHE_KEY = "frp2_dash_cache";
+const CACHE_TTL = 3600000; // 1hr
+
+Chart.defaults.color = '#6b7a8d';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+// ===================================================================
+// LOGIN
+// ===================================================================
+function checkLogin() {
+  const pass = document.getElementById('pass-input').value;
+  const overlay = document.getElementById('login-overlay');
+  const error = document.getElementById('login-error');
+  const nav = document.getElementById('topnav');
+
+  if (pass === "4101") {
+    overlay.style.display = "none";
+    nav.style.display = "flex";
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    loadDashboard();
+  } else if (pass === "6840") {
+    overlay.style.display = "none";
+    nav.style.display = "flex";
+    loadDashboard();
+  } else {
+    error.style.display = "block";
+    document.getElementById('pass-input').value = "";
+  }
+}
+
+// ===================================================================
+// NAV
+// ===================================================================
+function switchView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===================================================================
+// LOADING BAR
+// ===================================================================
+function setLoading(pct) {
+  const bar = document.getElementById('loading-bar');
+  bar.style.width = pct + '%';
+  if (pct >= 100) setTimeout(() => bar.style.width = '0%', 400);
+}
+
+// ===================================================================
+// UTILS
+// ===================================================================
+function fmt(v, dec=0) {
+  if (v == null || v === '' || isNaN(Number(v))) return '-';
+  return Number(v).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec > 0 ? dec : 2 });
+}
+function fmtPct(v, dec=2) {
+  if (v == null || v === '' || isNaN(Number(v))) return '-';
+  return (Number(v) * 100).toFixed(dec) + '%';
+}
+function fmtPctRaw(v, dec=2) {
+  if (v == null || v === '' || isNaN(Number(v))) return '-';
+  return Number(v).toFixed(dec) + '%';
+}
+
+const PALETTE = ['#00e5ff','#00ff9c','#fbbf24','#ff4560','#a78bfa','#34d399','#f59e0b','#60a5fa','#f472b6','#818cf8'];
+const PALETTE2 = ['#00ff9c','#fbbf24']; // for additives
+
+// ===================================================================
+// DASHBOARD
+// ===================================================================
+let dashData = null; // {total, v05, v0302}
+let dashCharts = {};
+let currentDashProduct = 'total';
+
+async function loadDashboard() {
+  const cached = localStorage.getItem(CACHE_KEY);
+  const cacheTime = localStorage.getItem(CACHE_KEY + '_time');
+  if (cached && cacheTime && (Date.now() - Number(cacheTime) < CACHE_TTL)) {
+    try {
+      dashData = JSON.parse(cached);
+      renderDashboard();
+      document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date(Number(cacheTime)).toLocaleString() + ' (cached)';
+      return;
+    } catch(e) {}
+  }
+  await refreshDashboard();
+}
+
+async function refreshDashboard() {
+  setLoading(20);
+  document.getElementById('dash-update-info').innerHTML = '<span class="loading-spinner"></span>Loading...';
+  try {
+    const r = await fetch(API_URL + '?action=dashboard');
+    setLoading(70);
+    const data = await r.json();
+    dashData = data;
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(CACHE_KEY + '_time', Date.now());
+    renderDashboard();
+    document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date().toLocaleString() + ' (live)';
+  } catch(err) {
+    console.error(err);
+    document.getElementById('dash-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">Failed to load data. Check network or API.</td></tr>`;
+    document.getElementById('dash-update-info').innerText = 'Load failed';
+  }
+  setLoading(100);
+}
+
+function switchDashProduct(key, btn) {
+  currentDashProduct = key;
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (dashData) renderDashboard();
+}
+
+function renderDashboard() {
+  if (!dashData) return;
+  const key = currentDashProduct;
+  const months = dashData[key] || dashData.total || [];
+
+  const labels = [], q=[], uq=[], waste=[], ag=[], wp=[];
+  let tbody = '';
+
+  for (let m = 1; m <= 12; m++) {
+    const row = months.find(r => Number(r.month) === m);
+    labels.push('M' + m);
+    if (!row) {
+      tbody += `<tr><td>${MONTH_NAMES[m-1]}</td><td colspan="6" style="text-align:center;color:var(--muted);">—</td></tr>`;
+      q.push(null); uq.push(null); waste.push(null); ag.push(null); wp.push(null);
+    } else {
+      const qv = Number(row.qualified||0), uqv = Number(row.unqualified||0);
+      const tv = qv + uqv;
+      const agv = tv > 0 ? (qv/tv*100) : 0;
+      const wv = Number(row.totalWaste||row.waste||0);
+      const wpv = tv > 0 ? (wv/tv*100) : 0;
+      q.push(qv); uq.push(uqv); waste.push(wv); ag.push(agv); wp.push(wpv);
+      const agClass = agv < 99 ? 'danger-cell' : 'ok-cell';
+      const wpClass = wpv > 5.3 ? 'danger-cell' : 'ok-cell';
+      tbody += `<tr>
+        <td>${MONTH_NAMES[m-1]}</td>
+        <td>${fmt(qv)}</td><td>${fmt(uqv)}</td><td>${fmt(tv)}</td>
+        <td class="${agClass}">${agv.toFixed(2)}%</td>
+        <td>${fmt(wv)}</td>
+        <td class="${wpClass}">${wpv.toFixed(2)}%</td>
+      </tr>`;
+    }
+  }
+
+  // Total row
+  const totalRow = (dashData[key+'_total'] || dashData[key] || []).find ? null : null;
+  if (dashData[key+'_total']) {
+    const tr = dashData[key+'_total'];
+    const tv = Number(tr.qualified||0)+Number(tr.unqualified||0);
+    const agv = tv>0 ? (Number(tr.qualified||0)/tv*100) : 0;
+    const wv = Number(tr.totalWaste||tr.waste||0);
+    const wpv = tv>0 ? (wv/tv*100) : 0;
+    tbody += `<tr class="total-row">
+      <td>TOTAL</td><td>${fmt(tr.qualified)}</td><td>${fmt(tr.unqualified)}</td>
+      <td>${fmt(tv)}</td><td class="${agv<99?'danger-cell':'ok-cell'}">${agv.toFixed(2)}%</td>
+      <td>${fmt(wv)}</td><td class="${wpv>5.3?'danger-cell':'ok-cell'}">${wpv.toFixed(2)}%</td>
+    </tr>`;
+  }
+
+  document.getElementById('dash-tbody').innerHTML = tbody || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);">No data for this product</td></tr>';
+
+  // Charts
+  drawDashCharts(labels, q, uq, waste, ag, wp);
+  document.getElementById('dash-charts').style.display = 'grid';
+}
+
+function drawDashCharts(labels, q, uq, waste, ag, wp) {
+  ['dash-chart-1','dash-chart-2'].forEach(id => {
+    if (dashCharts[id]) dashCharts[id].destroy();
+  });
+  const scaleOpts = {
+    x: { ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'} },
+    y: { ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}, beginAtZero:true }
+  };
+  dashCharts['dash-chart-1'] = new Chart(document.getElementById('dash-chart-1').getContext('2d'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'Qualified (kg)', data:q, borderColor:'#00ff9c', backgroundColor:'rgba(0,255,156,0.08)', tension:0.3, pointRadius:4, fill:true},
+      {label:'UnQualified (kg)', data:uq, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true},
+      {label:'Waste (kg)', data:waste, borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,0.08)', tension:0.3, pointRadius:4, fill:true}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8a97a6',boxWidth:12}}},
+      scales:scaleOpts }
+  });
+  dashCharts['dash-chart-2'] = new Chart(document.getElementById('dash-chart-2').getContext('2d'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'A-grade (%)', data:ag, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:0.3, pointRadius:4, fill:true},
+      {label:'Waste (%)', data:wp, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8a97a6',boxWidth:12}}},
+      scales:{...scaleOpts, y:{...scaleOpts.y, ticks:{color:'#6b7a8d', callback:v=>v+'%'}}} }
+  });
+}
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ===================================================================
+// SEARCH
+// ===================================================================
+let searchCharts = {};
+let pendingSave = null;
+
+async function runSearch() {
+  const btn = document.getElementById('s-calc-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>Loading...';
+  setLoading(10);
+
+  const params = {
+    action: 'search',
+    startDate:  document.getElementById('s-start').value,
+    startShift: document.getElementById('s-shift1').value,
+    endDate:    document.getElementById('s-end').value,
+    endShift:   document.getElementById('s-shift2').value,
+    line:       document.getElementById('s-line').value,
+    productCode: document.getElementById('s-product').value
+  };
+
+  if (!params.startDate || !params.endDate) {
+    alert('Please select start and end date!');
+    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    return;
+  }
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+    setLoading(80);
+    const data = await r.json();
+    renderSearch(data, params);
+    pendingSave = { data, params };
+    document.getElementById('s-save-bar').style.display = 'flex';
+    document.getElementById('s-production-section').style.display = 'block';
+  } catch(err) {
+    alert('Error fetching data! ' + err.message);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ Calculate';
+    setLoading(100);
+  }
+}
+
+function renderSearch(d, params) {
+  // Production cards
+  const prod = d.production || d;
+  const aGrade = Number(prod.agrade||0) * 100;
+  const wastePct = Number(prod.wastePct||prod.wastePercent||0) * 100;
+  const agClass = aGrade < 99 ? 'v-danger' : 'v-accent2';
+  const wClass = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
+
+  document.getElementById('s-prod-cards').innerHTML = `
+    <div class="metric-card"><div class="metric-label">MATERIAL</div><div class="metric-value">${fmt(prod.material)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">ADDITIVES</div><div class="metric-value">${fmt(prod.additives)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">INPUT</div><div class="metric-value">${fmt(prod.input)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">QUALIFIED</div><div class="metric-value v-accent2">${fmt(prod.qualified||prod.q)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">UNQUALIFIED</div><div class="metric-value v-danger">${fmt(prod.unqualified||prod.uq)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">WASTE</div><div class="metric-value v-warn">${fmt(prod.waste)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">OUTPUT</div><div class="metric-value">${fmt(prod.output)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">THROUGHPUT</div><div class="metric-value">${fmt(prod.throughput,1)}</div><div class="metric-unit">kg/h</div></div>
+    <div class="metric-card"><div class="metric-label">A-GRADE</div><div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div><div class="metric-unit">${aGrade < 99 ? '⚠ Below target' : '✓ On target'}</div></div>
+    <div class="metric-card"><div class="metric-label">WASTE %</div><div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div><div class="metric-unit">${wastePct > 5.3 ? '⚠ Above limit' : '✓ OK'}</div></div>
+    <div class="metric-card"><div class="metric-label">PRODUCTIVITY</div><div class="metric-value">${(Number(prod.productivity||0)*100).toFixed(2)}%</div><div class="metric-unit">Output / Input</div></div>
+  `;
+
+  // Quality cards
+  const q = d.quality || {};
+  document.getElementById('s-quality-cards').innerHTML = `
+    <div class="metric-card"><div class="metric-label">IV (avg)</div><div class="metric-value v-accent">${q.iv != null ? Number(q.iv).toFixed(3) : '-'}</div></div>
+    <div class="metric-card"><div class="metric-label">L* (avg)</div><div class="metric-value">${q.l != null ? Number(q.l).toFixed(2) : '-'}</div></div>
+    <div class="metric-card"><div class="metric-label">a* (avg)</div><div class="metric-value">${q.a != null ? Number(q.a).toFixed(2) : '-'}</div></div>
+    <div class="metric-card"><div class="metric-label">b* (avg)</div><div class="metric-value">${q.b != null ? Number(q.b).toFixed(2) : '-'}</div></div>
+  `;
+
+  // Charts
+  drawSearchCharts(d, aGrade, wastePct, Number(prod.productivity||0)*100);
+}
+
+function drawSearchCharts(d, aGrade, wastePct, productivity) {
+  // Destroy old
+  Object.values(searchCharts).forEach(c => { try { c.destroy(); } catch(e){} });
+  searchCharts = {};
+
+  const prod = d.production || d;
+
+  // Material pie
+  const matBreakdown = d.materialBreakdown || buildBreakdown(prod, 'material');
+  const addBreakdown = d.additivesBreakdown || buildBreakdown(prod, 'additives');
+
+  if (matBreakdown && matBreakdown.length) {
+    searchCharts.matPie = new Chart(document.getElementById('s-mat-pie').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: matBreakdown.map(x=>x.name),
+        datasets: [{ data: matBreakdown.map(x=>x.value), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#0f1520' }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'right', labels:{color:'#8a97a6',boxWidth:12,font:{size:11}} } } }
+    });
+  }
+
+  if (addBreakdown && addBreakdown.length) {
+    searchCharts.addPie = new Chart(document.getElementById('s-add-pie').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: addBreakdown.map(x=>x.name),
+        datasets: [{ data: addBreakdown.map(x=>x.value), backgroundColor: PALETTE2.concat(PALETTE.slice(2)), borderWidth: 2, borderColor: '#0f1520' }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'right', labels:{color:'#8a97a6',boxWidth:12,font:{size:11}} } } }
+    });
+  }
+
+  // KPI bar with target lines
+  const targetPlugin = {
+    id:'targetLines',
+    afterDatasetsDraw(chart) {
+      const {ctx, scales:{y}, data} = chart;
+      if (!y) return;
+      ctx.save();
+      // A-grade target = 99%
+      const yA = y.getPixelForValue(99);
+      // Waste target = 5.3%
+      const yW = y.getPixelForValue(5.3);
+      const meta0 = chart.getDatasetMeta(0);
+      if (!meta0 || !meta0.data.length) { ctx.restore(); return; }
+
+      [[yA, 99, '#00ff9c', 0], [yW, 5.3, '#ff4560', 1]].forEach(([yPx, val, color, barIdx]) => {
+        if (!meta0.data[barIdx]) return;
+        const bar = meta0.data[barIdx];
+        const x1 = bar.x - bar.width/2 - 4;
+        const x2 = bar.x + bar.width/2 + 4;
+        ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+        ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(x1, yPx); ctx.lineTo(x2, yPx); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color; ctx.font = '10px monospace';
+        ctx.fillText(val+'%', x2+4, yPx+3);
+      });
+      ctx.restore();
+    }
+  };
+
+  searchCharts.kpiBar = new Chart(document.getElementById('s-kpi-bar').getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:['A-grade', 'Waste %', 'Productivity'],
+      datasets:[{
+        label:'%',
+        data:[aGrade, wastePct, productivity],
+        backgroundColor:[aGrade<99?'#ff4560':'#00ff9c', wastePct>5.3?'#ff4560':'#00ff9c', '#00e5ff'],
+        borderRadius:6, borderWidth:0
+      }]
+    },
+    plugins:[targetPlugin],
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true, ticks:{callback:v=>v+'%', color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}},
+        x:{ticks:{color:'#6b7a8d'}, grid:{display:false}}
+      }
+    }
+  });
+
+  // Quality trend charts
+  const hourly = d.hourlyQuality || d.qualityTrend || [];
+  if (hourly.length > 0) {
+    const times = hourly.map(r => r.time || r.prodate || r.hour);
+    [
+      { key:'iv', id:'s-chart-iv', color:'#00e5ff', label:'IV' },
+      { key:'l',  id:'s-chart-l',  color:'#fbbf24', label:'L*' },
+      { key:'a',  id:'s-chart-a',  color:'#00ff9c', label:'a*' },
+      { key:'b',  id:'s-chart-b',  color:'#a78bfa', label:'b*' }
+    ].forEach(({ key, id, color, label }) => {
+      const vals = hourly.map(r => r[key] != null ? Number(r[key]) : null);
+      const avg = vals.filter(v=>v!=null).reduce((s,v)=>s+v,0) / (vals.filter(v=>v!=null).length || 1);
+      const avgLine = vals.map(v => v != null ? avg : null);
+
+      searchCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
+        type:'line',
+        data:{ labels: times, datasets:[
+          { label, data:vals, borderColor:color, backgroundColor:color+'20', tension:0.3, pointRadius:3, fill:true, borderWidth:2 },
+          { label:'Avg: '+avg.toFixed(3), data:avgLine, borderColor:color+'80', borderDash:[4,4], pointRadius:0, borderWidth:1.5, fill:false }
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{ labels:{color:'#8a97a6',boxWidth:10,font:{size:10}} } },
+          scales:{
+            x:{ticks:{color:'#6b7a8d',maxTicksLimit:8,maxRotation:30}, grid:{color:'rgba(255,255,255,0.04)'}},
+            y:{ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}}
+          }
+        }
+      });
+    });
+  }
+}
+
+function buildBreakdown(prod, type) {
+  // fallback if API doesn't return breakdown
+  return [];
+}
+
+// ===================================================================
+// SEARCH HISTORY
+// ===================================================================
+const HIST_KEY = 'frp2_search_history';
+function getHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch(e){ return []; } }
+function setHistory(arr) { localStorage.setItem(HIST_KEY, JSON.stringify(arr)); }
+
+function saveSearchResult() {
+  if (!pendingSave) return;
+  const note = document.getElementById('s-note').value.trim();
+  const hist = getHistory();
+  hist.unshift({
+    id: Date.now(),
+    savedAt: new Date().toLocaleString(),
+    note,
+    params: pendingSave.params,
+    data: pendingSave.data
+  });
+  setHistory(hist);
+  pendingSave = null;
+  document.getElementById('s-save-bar').style.display = 'none';
+  document.getElementById('s-note').value = '';
+  renderHistory();
+}
+
+function closeSaveBar() {
+  pendingSave = null;
+  document.getElementById('s-save-bar').style.display = 'none';
+}
+
+function clearHistory() {
+  if (!confirm('Clear all search history?')) return;
+  setHistory([]); renderHistory();
+}
+
+function deleteHistEntry(id) {
+  setHistory(getHistory().filter(e=>e.id!==id));
+  renderHistory();
+}
+
+function loadHistEntry(id) {
+  const e = getHistory().find(x=>x.id===id);
+  if (!e) return;
+  document.getElementById('s-start').value = e.params.startDate;
+  document.getElementById('s-shift1').value = e.params.startShift;
+  document.getElementById('s-end').value = e.params.endDate;
+  document.getElementById('s-shift2').value = e.params.endShift;
+  document.getElementById('s-line').value = e.params.line;
+  document.getElementById('s-product').value = e.params.productCode || 'All';
+  renderSearch(e.data, e.params);
+  document.getElementById('s-production-section').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderHistory() {
+  const hist = getHistory();
+  document.getElementById('hist-count').textContent = hist.length;
+  const container = document.getElementById('hist-container');
+  if (!hist.length) {
+    container.innerHTML = '<div class="empty-msg">No saved searches yet.</div>'; return;
+  }
+  const rows = hist.map(e => {
+    const prod = e.data.production || e.data;
+    const ag = (Number(prod.agrade||0)*100).toFixed(1);
+    const wp = (Number(prod.wastePct||prod.wastePercent||0)*100).toFixed(2);
+    const agC = Number(ag)<99 ? 'v-danger' : 'v-accent2';
+    const wpC = Number(wp)>5.3 ? 'v-danger' : 'v-accent2';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px;">${e.savedAt}</td>
+      <td>${e.note||'<span style="color:var(--muted);font-style:italic">—</span>'}</td>
+      <td style="color:var(--accent);font-weight:700;">${e.params.line}</td>
+      <td style="color:var(--muted2);">${e.params.productCode||'All'}</td>
+      <td>${e.params.startDate} ${e.params.startShift}</td>
+      <td>${e.params.endDate} ${e.params.endShift}</td>
+      <td>${fmt(prod.qualified||prod.q)}</td>
+      <td class="${agC}">${ag}%</td>
+      <td class="${wpC}">${wp}%</td>
+      <td>${fmt(prod.throughput,1)}</td>
+      <td>
+        <button class="btn-load-row" onclick="loadHistEntry(${e.id})">Load</button>
+        <button class="btn-del-row" onclick="deleteHistEntry(${e.id})" title="Delete">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <table class="history-table">
+      <thead><tr>
+        <th style="text-align:left;">Saved</th><th style="text-align:left;">Note</th>
+        <th style="text-align:left;">Line</th><th style="text-align:left;">Product</th>
+        <th style="text-align:left;">Start</th><th style="text-align:left;">End</th>
+        <th>Q (kg)</th><th>A-grade</th><th>Waste%</th><th>T/put</th><th style="text-align:left;">Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function exportHistory() {
+  const hist = getHistory();
+  if (!hist.length) { alert('No history to export'); return; }
+  const hdrs = ['Saved At','Note','Line','Product','Start Date','Start Shift','End Date','End Shift',
+    'Material (kg)','Additives (kg)','Input (kg)','Q (kg)','UQ (kg)','Waste (kg)','Throughput',
+    'A-grade (%)','Waste (%)','Productivity (%)'];
+  const rows = [hdrs.join(';')];
+  hist.forEach(e => {
+    const p = e.data.production || e.data;
+    rows.push([
+      e.savedAt, (e.note||'').replace(/;/g,' '),
+      e.params.line, e.params.productCode||'All',
+      e.params.startDate, e.params.startShift, e.params.endDate, e.params.endShift,
+      Number(p.material||0).toFixed(2), Number(p.additives||0).toFixed(2),
+      Number(p.input||0).toFixed(2), Number(p.qualified||p.q||0).toFixed(2),
+      Number(p.unqualified||p.uq||0).toFixed(2), Number(p.waste||0).toFixed(2),
+      Number(p.throughput||0).toFixed(2),
+      (Number(p.agrade||0)*100).toFixed(2),
+      (Number(p.wastePct||p.wastePercent||0)*100).toFixed(2),
+      (Number(p.productivity||0)*100).toFixed(2)
+    ].join(';'));
+  });
+  const blob = new Blob(['\uFEFF'+rows.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'FRP_History_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===================================================================
+// MORE DETAIL
+// ===================================================================
+const GROUP_NAMES = {
+  M: ['PLHG','Dingli','TruongHoa','QCB','Taita','BBP'],
+  S: ['SC','Blue','Yellow','Other'],
+  A: ['MB','Tracer'],
+  Q: ['8F','9F','Bagging'],
+  UQ:['8F','9F','Bagging'],
+  P: ['Flush','Operation','Stop']
+};
+const TYPE_GROUPS = {
+  C: ['M','S','A','Q','UQ'],
+  W: ['M','S','A','Q','UQ'],
+  T: ['P']
+};
+
+function updateDetailGroups() {
+  const type = document.getElementById('d-type').value;
+  const grpSel = document.getElementById('d-group');
+  grpSel.innerHTML = '<option value="">-- Select --</option>';
+  document.getElementById('d-name').innerHTML = '<option value="All">All</option>';
+  if (!type) return;
+  const groups = TYPE_GROUPS[type] || [];
+  groups.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g + ' — ' + getGroupDesc(g);
+    grpSel.appendChild(opt);
+  });
+}
+
+function updateDetailNames() {
+  const group = document.getElementById('d-group').value;
+  const nameSel = document.getElementById('d-name');
+  nameSel.innerHTML = '<option value="All">All</option>';
+  if (!group) return;
+  const names = GROUP_NAMES[group] || [];
+  names.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    nameSel.appendChild(opt);
+  });
+}
+
+function getGroupDesc(g) {
+  const d = {M:'Material',S:'Separate',A:'Additives',Q:'Qualified',UQ:'Unqualified',P:'Time'};
+  return d[g] || g;
+}
+
+async function runDetail() {
+  const btn = document.getElementById('d-calc-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>Loading...';
+  setLoading(15);
+
+  const type = document.getElementById('d-type').value;
+  const group = document.getElementById('d-group').value;
+  const name = document.getElementById('d-name').value;
+
+  if (!type || !group) {
+    alert('Please select Type and Group!');
+    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    return;
+  }
+
+  const params = {
+    action: 'detail',
+    startDate:   document.getElementById('d-start').value,
+    startShift:  document.getElementById('d-shift1').value,
+    endDate:     document.getElementById('d-end').value,
+    endShift:    document.getElementById('d-shift2').value,
+    line:        document.getElementById('d-line').value,
+    productCode: document.getElementById('d-product').value,
+    type, group, name
+  };
+
+  if (!params.startDate || !params.endDate) {
+    alert('Please select start and end date!');
+    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    return;
+  }
+
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+    setLoading(80);
+    const data = await r.json();
+    renderDetail(data, params);
+  } catch(err) {
+    alert('Error: ' + err.message);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ Calculate';
+    setLoading(100);
+  }
+}
+
+function renderDetail(data, params) {
+  const result = document.getElementById('detail-result');
+  result.style.display = 'block';
+
+  const code = `${params.type}_${params.group}${params.name !== 'All' ? '_'+params.name : ''}`;
+  const unit = params.type === 'C' ? 'bags' : params.type === 'W' ? 'kg' : 'minutes';
+
+  document.getElementById('detail-code').textContent = code.toUpperCase();
+
+  // Main value
+  const total = data.total != null ? data.total : (data.value != null ? data.value : null);
+  document.getElementById('detail-val').textContent = total != null ? Number(total).toLocaleString('en-US', {maximumFractionDigits:2}) + ' ' + unit : '—';
+
+  // Sub info
+  const filters = [
+    params.line !== 'All' ? `Line: ${params.line}` : 'All Lines',
+    params.productCode !== 'All' ? `Product: ${params.productCode}` : 'All Products',
+    `${params.startDate} Shift ${params.startShift} → ${params.endDate} Shift ${params.endShift}`
+  ];
+  document.getElementById('detail-sub').textContent = filters.join('  |  ');
+
+  // Breakdown table if available
+  const breakdown = data.breakdown || data.items || [];
+  if (breakdown.length) {
+    const rows = breakdown.map(item => `
+      <tr>
+        <td style="text-align:left;color:var(--accent2);">${item.name || item.label || '—'}</td>
+        <td>${Number(item.value||0).toLocaleString('en-US',{maximumFractionDigits:2})}</td>
+        <td>${item.pct != null ? (Number(item.pct)*100).toFixed(1)+'%' : '—'}</td>
+      </tr>`).join('');
+    document.getElementById('detail-breakdown').innerHTML = `
+      <div class="section-title" style="margin-bottom:12px;">BREAKDOWN</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="text-align:left;">Name</th><th>Value</th><th>Share</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } else {
+    document.getElementById('detail-breakdown').innerHTML = '';
+  }
+}
+
+// ===================================================================
+// INIT
+// ===================================================================
+renderHistory();
+
+// Default dates (today & 7 days ago)
+const today = new Date();
+const weekAgo = new Date();
+weekAgo.setDate(weekAgo.getDate() - 7);
+const fmt2 = d => d.toISOString().slice(0,10);
+['s-start','d-start'].forEach(id => document.getElementById(id).value = fmt2(weekAgo));
+['s-end','d-end'].forEach(id => document.getElementById(id).value = fmt2(today));
+</script>
+</body>
+</html>
