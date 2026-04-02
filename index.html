@@ -296,7 +296,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 
 <div id="loading-bar"></div>
 
-<!-- LOGIN -->
 <div id="login-overlay">
   <div class="login-box">
     <div class="login-logo">FRP</div>
@@ -309,7 +308,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   </div>
 </div>
 
-<!-- TOP NAV -->
 <nav id="topnav">
   <div class="nav-brand">FRP</div>
   <div class="nav-tabs">
@@ -323,9 +321,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   </div>
 </nav>
 
-<!-- ============================================================ -->
-<!-- DASHBOARD TAB -->
-<!-- ============================================================ -->
 <div id="v-dashboard" class="view active">
   <div class="wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
@@ -341,7 +336,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
     </div>
 
     <div id="dash-content">
-      <!-- Table -->
       <div id="dash-table-wrap" class="table-wrap">
         <table id="dash-table">
           <thead>
@@ -362,7 +356,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </table>
       </div>
 
-      <!-- Charts -->
       <div class="charts-grid" id="dash-charts" style="display:none;">
         <div class="chart-box">
           <div class="chart-title">PRODUCTION VOLUME TREND (kg)</div>
@@ -377,13 +370,9 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- SEARCH TAB -->
-<!-- ============================================================ -->
 <div id="v-search" class="view">
   <div class="wrap">
 
-    <!-- Controls -->
     <div class="ctrl-panel">
       <div class="ctrl-group">
         <div class="ctrl-label">START DATE</div>
@@ -392,9 +381,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <select id="s-shift1">
             <option value="A">Shift A</option>
             <option value="B">Shift B</option>
-            <option value="1">Shift 1</option>
-            <option value="2">Shift 2</option>
-            <option value="3">Shift 3</option>
           </select>
         </div>
       </div>
@@ -405,9 +391,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <select id="s-shift2">
             <option value="B">Shift B</option>
             <option value="A">Shift A</option>
-            <option value="1">Shift 1</option>
-            <option value="2">Shift 2</option>
-            <option value="3">Shift 3</option>
           </select>
         </div>
       </div>
@@ -430,12 +413,10 @@ tbody tr.total-row td:first-child{color:var(--warn);}
       <button class="btn-calc" id="s-calc-btn" onclick="runSearch()">▶ Calculate</button>
     </div>
 
-    <!-- Production Results -->
     <div id="s-production-section" style="display:none;">
       <div class="section-title">PRODUCTION</div>
       <div class="metrics-grid" id="s-prod-cards"></div>
 
-      <!-- Save bar -->
       <div class="save-bar" id="s-save-bar">
         <span style="font-size:12px;color:var(--muted2);white-space:nowrap;">Save result:</span>
         <input type="text" id="s-note" placeholder="Note (optional)...">
@@ -443,7 +424,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <button class="btn-sm btn-skip" onclick="closeSaveBar()">Skip</button>
       </div>
 
-      <!-- Charts row 1: material/additives pies + bar -->
       <div class="section-title">BREAKDOWN</div>
       <div class="charts-grid" id="s-charts-1">
         <div class="chart-box">
@@ -460,11 +440,9 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </div>
       </div>
 
-      <!-- Quality -->
       <div class="section-title">QUALITY AVERAGES</div>
       <div class="quality-cards" id="s-quality-cards"></div>
 
-      <!-- IV, L, a, b hourly charts -->
       <div class="section-title">QUALITY TREND (per sample)</div>
       <div class="charts-grid-4" id="s-quality-charts">
         <div class="chart-box">
@@ -486,7 +464,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
       </div>
     </div>
 
-    <!-- History -->
     <div class="history-section">
       <div class="history-hdr">
         <div class="history-title">SEARCH HISTORY <span class="badge" id="hist-count">0</span></div>
@@ -503,9 +480,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MORE DETAIL TAB -->
-<!-- ============================================================ -->
 <div id="v-detail" class="view">
   <div class="wrap">
 
@@ -521,9 +495,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <select id="d-shift1">
             <option value="A">Shift A</option>
             <option value="B">Shift B</option>
-            <option value="1">Shift 1</option>
-            <option value="2">Shift 2</option>
-            <option value="3">Shift 3</option>
           </select>
         </div>
       </div>
@@ -534,9 +505,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <select id="d-shift2">
             <option value="B">Shift B</option>
             <option value="A">Shift A</option>
-            <option value="1">Shift 1</option>
-            <option value="2">Shift 2</option>
-            <option value="3">Shift 3</option>
           </select>
         </div>
       </div>
@@ -592,11 +560,16 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 
 <script>
 // ===================================================================
-// CONFIG
+// CONFIG & STATE
 // ===================================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbzrZ51M-fXhWJShajLj0YKY74iwvg1G1ovUmb2tVgI0Xy7C0hHtouTLLgXMEhixIR8HHg/exec";
-const CACHE_KEY = "frp2_dash_cache";
+// URL thay thế lấy từ test04
+const API_URL = "https://script.google.com/macros/s/AKfycbweiEb2DXKl0u3PeQ7y5LPKAtaUQYBJgPldmCxcb4H11vsM7H8IfHIMXhLEgfZALtPlAg/exec";
+const CACHE_KEY = "frp2_dash_cache_v4";
 const CACHE_TTL = 3600000; // 1hr
+
+let rawData = { ngr: [], sta: [] };
+let dashCharts = {};
+let currentDashProduct = 'total';
 
 Chart.defaults.color = '#6b7a8d';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
@@ -651,31 +624,19 @@ function fmt(v, dec=0) {
   if (v == null || v === '' || isNaN(Number(v))) return '-';
   return Number(v).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec > 0 ? dec : 2 });
 }
-function fmtPct(v, dec=2) {
-  if (v == null || v === '' || isNaN(Number(v))) return '-';
-  return (Number(v) * 100).toFixed(dec) + '%';
-}
-function fmtPctRaw(v, dec=2) {
-  if (v == null || v === '' || isNaN(Number(v))) return '-';
-  return Number(v).toFixed(dec) + '%';
-}
 
 const PALETTE = ['#00e5ff','#00ff9c','#fbbf24','#ff4560','#a78bfa','#34d399','#f59e0b','#60a5fa','#f472b6','#818cf8'];
-const PALETTE2 = ['#00ff9c','#fbbf24']; // for additives
+const PALETTE2 = ['#00ff9c','#fbbf24']; 
 
 // ===================================================================
-// DASHBOARD
+// FETCH DATA (Client-side logic)
 // ===================================================================
-let dashData = null; // {total, v05, v0302}
-let dashCharts = {};
-let currentDashProduct = 'total';
-
 async function loadDashboard() {
   const cached = localStorage.getItem(CACHE_KEY);
   const cacheTime = localStorage.getItem(CACHE_KEY + '_time');
   if (cached && cacheTime && (Date.now() - Number(cacheTime) < CACHE_TTL)) {
     try {
-      dashData = JSON.parse(cached);
+      rawData = JSON.parse(cached);
       renderDashboard();
       document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date(Number(cacheTime)).toLocaleString() + ' (cached)';
       return;
@@ -686,13 +647,12 @@ async function loadDashboard() {
 
 async function refreshDashboard() {
   setLoading(20);
-  document.getElementById('dash-update-info').innerHTML = '<span class="loading-spinner"></span>Loading...';
+  document.getElementById('dash-update-info').innerHTML = '<span class="loading-spinner"></span>Fetching data...';
   try {
-    const r = await fetch(API_URL + '?action=dashboard');
+    const r = await fetch(API_URL);
     setLoading(70);
-    const data = await r.json();
-    dashData = data;
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    rawData = await r.json();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(rawData));
     localStorage.setItem(CACHE_KEY + '_time', Date.now());
     renderDashboard();
     document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date().toLocaleString() + ' (live)';
@@ -704,65 +664,91 @@ async function refreshDashboard() {
   setLoading(100);
 }
 
+// ===================================================================
+// DASHBOARD 2026 LOGIC
+// ===================================================================
 function switchDashProduct(key, btn) {
   currentDashProduct = key;
   document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (dashData) renderDashboard();
+  if (rawData.ngr || rawData.sta) renderDashboard();
 }
 
 function renderDashboard() {
-  if (!dashData) return;
-  const key = currentDashProduct;
-  const months = dashData[key] || dashData.total || [];
+  if (!rawData.ngr && !rawData.sta) return;
 
-  const labels = [], q=[], uq=[], waste=[], ag=[], wp=[];
-  let tbody = '';
+  let pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
 
-  for (let m = 1; m <= 12; m++) {
-    const row = months.find(r => Number(r.month) === m);
-    labels.push('M' + m);
-    if (!row) {
-      tbody += `<tr><td>${MONTH_NAMES[m-1]}</td><td colspan="6" style="text-align:center;color:var(--muted);">—</td></tr>`;
-      q.push(null); uq.push(null); waste.push(null); ag.push(null); wp.push(null);
-    } else {
-      const qv = Number(row.qualified||0), uqv = Number(row.unqualified||0);
-      const tv = qv + uqv;
-      const agv = tv > 0 ? (qv/tv*100) : 0;
-      const wv = Number(row.totalWaste||row.waste||0);
-      const wpv = tv > 0 ? (wv/tv*100) : 0;
-      q.push(qv); uq.push(uqv); waste.push(wv); ag.push(agv); wp.push(wpv);
-      const agClass = agv < 99 ? 'danger-cell' : 'ok-cell';
-      const wpClass = wpv > 5.3 ? 'danger-cell' : 'ok-cell';
-      tbody += `<tr>
-        <td>${MONTH_NAMES[m-1]}</td>
-        <td>${fmt(qv)}</td><td>${fmt(uqv)}</td><td>${fmt(tv)}</td>
-        <td class="${agClass}">${agv.toFixed(2)}%</td>
-        <td>${fmt(wv)}</td>
-        <td class="${wpClass}">${wpv.toFixed(2)}%</td>
-      </tr>`;
-    }
+  if (currentDashProduct !== "total") {
+    pool = pool.filter(r => {
+      const code = String(r["Product Code"] || "").toUpperCase();
+      if (currentDashProduct === "v05") return code.includes("V05");
+      if (currentDashProduct === "v0302") return code.includes("V03-02");
+      return false;
+    });
   }
 
-  // Total row
-  const totalRow = (dashData[key+'_total'] || dashData[key] || []).find ? null : null;
-  if (dashData[key+'_total']) {
-    const tr = dashData[key+'_total'];
-    const tv = Number(tr.qualified||0)+Number(tr.unqualified||0);
-    const agv = tv>0 ? (Number(tr.qualified||0)/tv*100) : 0;
-    const wv = Number(tr.totalWaste||tr.waste||0);
-    const wpv = tv>0 ? (wv/tv*100) : 0;
-    tbody += `<tr class="total-row">
-      <td>TOTAL</td><td>${fmt(tr.qualified)}</td><td>${fmt(tr.unqualified)}</td>
-      <td>${fmt(tv)}</td><td class="${agv<99?'danger-cell':'ok-cell'}">${agv.toFixed(2)}%</td>
-      <td>${fmt(wv)}</td><td class="${wpv>5.3?'danger-cell':'ok-cell'}">${wpv.toFixed(2)}%</td>
+  let months = {};
+  for(let i=1; i<=12; i++) {
+    months[i] = { Q: 0, UQ: 0, S: 0 };
+  }
+
+  pool.forEach(r => {
+    const d = new Date(r.DATE);
+    if (isNaN(d) || d.getFullYear() !== 2026) return;
+    const m = d.getMonth() + 1;
+
+    for (let k in r) {
+      let v = parseFloat(r[k]) || 0;
+      if (k.startsWith("W_Q")) months[m].Q += v;
+      if (k.startsWith("W_UQ")) months[m].UQ += v;
+      if (k.startsWith("W_S")) months[m].S += v;
+    }
+  });
+
+  const labels = [], qArr = [], uqArr = [], wasteArr = [], agArr = [], wpArr = [];
+  let tbody = '';
+  let totalQ = 0, totalUQ = 0, totalS = 0;
+
+  for (let m = 1; m <= 12; m++) {
+    const d = months[m];
+    const t = d.Q + d.UQ;
+    const ag = t ? (d.Q / t) * 100 : 0;
+    const wp = t ? (d.S / t) * 100 : 0;
+
+    labels.push('M' + m);
+    qArr.push(d.Q); uqArr.push(d.UQ); wasteArr.push(d.S);
+    agArr.push(ag); wpArr.push(wp);
+
+    totalQ += d.Q; totalUQ += d.UQ; totalS += d.S;
+
+    const agClass = ag < 99 && t > 0 ? 'danger-cell' : 'ok-cell';
+    const wpClass = wp > 5.3 && t > 0 ? 'danger-cell' : 'ok-cell';
+
+    tbody += `<tr>
+      <td>${MONTH_NAMES[m-1]}</td>
+      <td>${fmt(d.Q)}</td><td>${fmt(d.UQ)}</td><td>${fmt(t)}</td>
+      <td class="${t > 0 ? agClass : ''}">${t > 0 ? ag.toFixed(2) + '%' : '-'}</td>
+      <td>${fmt(d.S)}</td>
+      <td class="${t > 0 ? wpClass : ''}">${t > 0 ? wp.toFixed(2) + '%' : '-'}</td>
     </tr>`;
   }
 
-  document.getElementById('dash-tbody').innerHTML = tbody || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted);">No data for this product</td></tr>';
+  // Total Row
+  const grandTotal = totalQ + totalUQ;
+  const grandAg = grandTotal ? (totalQ / grandTotal) * 100 : 0;
+  const grandWp = grandTotal ? (totalS / grandTotal) * 100 : 0;
 
-  // Charts
-  drawDashCharts(labels, q, uq, waste, ag, wp);
+  tbody += `<tr class="total-row">
+    <td>TOTAL</td><td>${fmt(totalQ)}</td><td>${fmt(totalUQ)}</td>
+    <td>${fmt(grandTotal)}</td>
+    <td class="${grandAg < 99 ? 'danger-cell' : 'ok-cell'}">${grandTotal > 0 ? grandAg.toFixed(2) + '%' : '-'}</td>
+    <td>${fmt(totalS)}</td>
+    <td class="${grandWp > 5.3 ? 'danger-cell' : 'ok-cell'}">${grandTotal > 0 ? grandWp.toFixed(2) + '%' : '-'}</td>
+  </tr>`;
+
+  document.getElementById('dash-tbody').innerHTML = tbody;
+  drawDashCharts(labels, qArr, uqArr, wasteArr, agArr, wpArr);
   document.getElementById('dash-charts').style.display = 'grid';
 }
 
@@ -800,7 +786,7 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ===================================================================
-// SEARCH
+// SEARCH LOGIC
 // ===================================================================
 let searchCharts = {};
 let pendingSave = null;
@@ -812,7 +798,6 @@ async function runSearch() {
   setLoading(10);
 
   const params = {
-    action: 'search',
     startDate:  document.getElementById('s-start').value,
     startShift: document.getElementById('s-shift1').value,
     endDate:    document.getElementById('s-end').value,
@@ -824,99 +809,108 @@ async function runSearch() {
   if (!params.startDate || !params.endDate) {
     alert('Please select start and end date!');
     btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    setLoading(100);
     return;
   }
 
-  try {
-    const r = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(params)
+  // Client-side filtering logic
+  setTimeout(() => {
+    let pool = [];
+    if (params.line === 'NGR') pool = rawData.ngr || [];
+    else if (params.line === 'STA') pool = rawData.sta || [];
+    else pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
+
+    const ds = new Date(params.startDate); ds.setHours(0,0,0,0);
+    const de = new Date(params.endDate); de.setHours(23,59,59,999);
+
+    let filtered = pool.filter(r => {
+      const d = new Date(r.DATE);
+      if (isNaN(d) || d < ds || d > de) return false;
+
+      // Filter by Product code
+      if (params.productCode !== 'All') {
+        const code = String(r["Product Code"] || "").toUpperCase();
+        if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
+        if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+      }
+      return true;
     });
-    setLoading(80);
-    const data = await r.json();
+
+    // Compute
+    let Q = 0, UQ = 0, S = 0;
+    filtered.forEach(r => {
+      for (let k in r) {
+        let v = parseFloat(r[k]) || 0;
+        if (k.startsWith("W_Q")) Q += v;
+        if (k.startsWith("W_UQ")) UQ += v;
+        if (k.startsWith("W_S")) S += v;
+      }
+    });
+
+    const total = Q + UQ;
+    const aGrade = total ? (Q / total) * 100 : 0;
+    const wastePct = total ? (S / total) * 100 : 0;
+
+    // Build standard return object
+    const data = {
+      production: {
+        qualified: Q,
+        unqualified: UQ,
+        waste: S,
+        output: total,
+        input: total + S,
+        agrade: aGrade / 100, // Storing as decimal internally to match v3 logic
+        wastePct: wastePct / 100,
+        // Optional placeholders for UI
+        material: null, additives: null, throughput: null, productivity: null
+      },
+      quality: { iv: null, l: null, a: null, b: null },
+      hourlyQuality: []
+    };
+
     renderSearch(data, params);
     pendingSave = { data, params };
+    
     document.getElementById('s-save-bar').style.display = 'flex';
     document.getElementById('s-production-section').style.display = 'block';
-  } catch(err) {
-    alert('Error fetching data! ' + err.message);
-    console.error(err);
-  } finally {
+
     btn.disabled = false;
     btn.innerHTML = '▶ Calculate';
     setLoading(100);
-  }
+  }, 100);
 }
 
 function renderSearch(d, params) {
-  // Production cards
-  const prod = d.production || d;
+  const prod = d.production;
   const aGrade = Number(prod.agrade||0) * 100;
-  const wastePct = Number(prod.wastePct||prod.wastePercent||0) * 100;
+  const wastePct = Number(prod.wastePct||0) * 100;
   const agClass = aGrade < 99 ? 'v-danger' : 'v-accent2';
   const wClass = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
 
   document.getElementById('s-prod-cards').innerHTML = `
-    <div class="metric-card"><div class="metric-label">MATERIAL</div><div class="metric-value">${fmt(prod.material)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">ADDITIVES</div><div class="metric-value">${fmt(prod.additives)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">INPUT</div><div class="metric-value">${fmt(prod.input)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">QUALIFIED</div><div class="metric-value v-accent2">${fmt(prod.qualified||prod.q)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">UNQUALIFIED</div><div class="metric-value v-danger">${fmt(prod.unqualified||prod.uq)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">QUALIFIED</div><div class="metric-value v-accent2">${fmt(prod.qualified)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">UNQUALIFIED</div><div class="metric-value v-danger">${fmt(prod.unqualified)}</div><div class="metric-unit">kg</div></div>
     <div class="metric-card"><div class="metric-label">WASTE</div><div class="metric-value v-warn">${fmt(prod.waste)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">OUTPUT</div><div class="metric-value">${fmt(prod.output)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">THROUGHPUT</div><div class="metric-value">${fmt(prod.throughput,1)}</div><div class="metric-unit">kg/h</div></div>
-    <div class="metric-card"><div class="metric-label">A-GRADE</div><div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div><div class="metric-unit">${aGrade < 99 ? '⚠ Below target' : '✓ On target'}</div></div>
-    <div class="metric-card"><div class="metric-label">WASTE %</div><div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div><div class="metric-unit">${wastePct > 5.3 ? '⚠ Above limit' : '✓ OK'}</div></div>
-    <div class="metric-card"><div class="metric-label">PRODUCTIVITY</div><div class="metric-value">${(Number(prod.productivity||0)*100).toFixed(2)}%</div><div class="metric-unit">Output / Input</div></div>
+    <div class="metric-card"><div class="metric-label">TOTAL PRODUCT</div><div class="metric-value">${fmt(prod.output)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">INPUT (EST.)</div><div class="metric-value">${fmt(prod.input)}</div><div class="metric-unit">kg</div></div>
+    <div class="metric-card"><div class="metric-label">A-GRADE</div><div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div><div class="metric-unit">${aGrade < 99 && prod.output > 0 ? '⚠ Below target' : '✓ On target'}</div></div>
+    <div class="metric-card"><div class="metric-label">WASTE %</div><div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div><div class="metric-unit">${wastePct > 5.3 && prod.output > 0 ? '⚠ Above limit' : '✓ OK'}</div></div>
   `;
 
-  // Quality cards
-  const q = d.quality || {};
+  // Quality cards (Currently Mocked as no Quality fields provided in test04 schema)
   document.getElementById('s-quality-cards').innerHTML = `
-    <div class="metric-card"><div class="metric-label">IV (avg)</div><div class="metric-value v-accent">${q.iv != null ? Number(q.iv).toFixed(3) : '-'}</div></div>
-    <div class="metric-card"><div class="metric-label">L* (avg)</div><div class="metric-value">${q.l != null ? Number(q.l).toFixed(2) : '-'}</div></div>
-    <div class="metric-card"><div class="metric-label">a* (avg)</div><div class="metric-value">${q.a != null ? Number(q.a).toFixed(2) : '-'}</div></div>
-    <div class="metric-card"><div class="metric-label">b* (avg)</div><div class="metric-value">${q.b != null ? Number(q.b).toFixed(2) : '-'}</div></div>
+    <div class="metric-card"><div class="metric-label">IV (avg)</div><div class="metric-value v-accent">-</div></div>
+    <div class="metric-card"><div class="metric-label">L* (avg)</div><div class="metric-value">-</div></div>
+    <div class="metric-card"><div class="metric-label">a* (avg)</div><div class="metric-value">-</div></div>
+    <div class="metric-card"><div class="metric-label">b* (avg)</div><div class="metric-value">-</div></div>
   `;
 
-  // Charts
-  drawSearchCharts(d, aGrade, wastePct, Number(prod.productivity||0)*100);
+  drawSearchCharts(d, aGrade, wastePct, 0);
 }
 
 function drawSearchCharts(d, aGrade, wastePct, productivity) {
-  // Destroy old
   Object.values(searchCharts).forEach(c => { try { c.destroy(); } catch(e){} });
   searchCharts = {};
-
-  const prod = d.production || d;
-
-  // Material pie
-  const matBreakdown = d.materialBreakdown || buildBreakdown(prod, 'material');
-  const addBreakdown = d.additivesBreakdown || buildBreakdown(prod, 'additives');
-
-  if (matBreakdown && matBreakdown.length) {
-    searchCharts.matPie = new Chart(document.getElementById('s-mat-pie').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: matBreakdown.map(x=>x.name),
-        datasets: [{ data: matBreakdown.map(x=>x.value), backgroundColor: PALETTE, borderWidth: 2, borderColor: '#0f1520' }]
-      },
-      options: { responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{color:'#8a97a6',boxWidth:12,font:{size:11}} } } }
-    });
-  }
-
-  if (addBreakdown && addBreakdown.length) {
-    searchCharts.addPie = new Chart(document.getElementById('s-add-pie').getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: addBreakdown.map(x=>x.name),
-        datasets: [{ data: addBreakdown.map(x=>x.value), backgroundColor: PALETTE2.concat(PALETTE.slice(2)), borderWidth: 2, borderColor: '#0f1520' }]
-      },
-      options: { responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{color:'#8a97a6',boxWidth:12,font:{size:11}} } } }
-    });
-  }
 
   // KPI bar with target lines
   const targetPlugin = {
@@ -925,9 +919,7 @@ function drawSearchCharts(d, aGrade, wastePct, productivity) {
       const {ctx, scales:{y}, data} = chart;
       if (!y) return;
       ctx.save();
-      // A-grade target = 99%
       const yA = y.getPixelForValue(99);
-      // Waste target = 5.3%
       const yW = y.getPixelForValue(5.3);
       const meta0 = chart.getDatasetMeta(0);
       if (!meta0 || !meta0.data.length) { ctx.restore(); return; }
@@ -951,11 +943,11 @@ function drawSearchCharts(d, aGrade, wastePct, productivity) {
   searchCharts.kpiBar = new Chart(document.getElementById('s-kpi-bar').getContext('2d'), {
     type:'bar',
     data:{
-      labels:['A-grade', 'Waste %', 'Productivity'],
+      labels:['A-grade', 'Waste %'],
       datasets:[{
         label:'%',
-        data:[aGrade, wastePct, productivity],
-        backgroundColor:[aGrade<99?'#ff4560':'#00ff9c', wastePct>5.3?'#ff4560':'#00ff9c', '#00e5ff'],
+        data:[aGrade, wastePct],
+        backgroundColor:[aGrade<99?'#ff4560':'#00ff9c', wastePct>5.3?'#ff4560':'#00ff9c'],
         borderRadius:6, borderWidth:0
       }]
     },
@@ -969,44 +961,8 @@ function drawSearchCharts(d, aGrade, wastePct, productivity) {
       }
     }
   });
-
-  // Quality trend charts
-  const hourly = d.hourlyQuality || d.qualityTrend || [];
-  if (hourly.length > 0) {
-    const times = hourly.map(r => r.time || r.prodate || r.hour);
-    [
-      { key:'iv', id:'s-chart-iv', color:'#00e5ff', label:'IV' },
-      { key:'l',  id:'s-chart-l',  color:'#fbbf24', label:'L*' },
-      { key:'a',  id:'s-chart-a',  color:'#00ff9c', label:'a*' },
-      { key:'b',  id:'s-chart-b',  color:'#a78bfa', label:'b*' }
-    ].forEach(({ key, id, color, label }) => {
-      const vals = hourly.map(r => r[key] != null ? Number(r[key]) : null);
-      const avg = vals.filter(v=>v!=null).reduce((s,v)=>s+v,0) / (vals.filter(v=>v!=null).length || 1);
-      const avgLine = vals.map(v => v != null ? avg : null);
-
-      searchCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-        type:'line',
-        data:{ labels: times, datasets:[
-          { label, data:vals, borderColor:color, backgroundColor:color+'20', tension:0.3, pointRadius:3, fill:true, borderWidth:2 },
-          { label:'Avg: '+avg.toFixed(3), data:avgLine, borderColor:color+'80', borderDash:[4,4], pointRadius:0, borderWidth:1.5, fill:false }
-        ]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ labels:{color:'#8a97a6',boxWidth:10,font:{size:10}} } },
-          scales:{
-            x:{ticks:{color:'#6b7a8d',maxTicksLimit:8,maxRotation:30}, grid:{color:'rgba(255,255,255,0.04)'}},
-            y:{ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}}
-          }
-        }
-      });
-    });
-  }
 }
 
-function buildBreakdown(prod, type) {
-  // fallback if API doesn't return breakdown
-  return [];
-}
 
 // ===================================================================
 // SEARCH HISTORY
@@ -1085,7 +1041,6 @@ function renderHistory() {
       <td>${fmt(prod.qualified||prod.q)}</td>
       <td class="${agC}">${ag}%</td>
       <td class="${wpC}">${wp}%</td>
-      <td>${fmt(prod.throughput,1)}</td>
       <td>
         <button class="btn-load-row" onclick="loadHistEntry(${e.id})">Load</button>
         <button class="btn-del-row" onclick="deleteHistEntry(${e.id})" title="Delete">✕</button>
@@ -1099,7 +1054,7 @@ function renderHistory() {
         <th style="text-align:left;">Saved</th><th style="text-align:left;">Note</th>
         <th style="text-align:left;">Line</th><th style="text-align:left;">Product</th>
         <th style="text-align:left;">Start</th><th style="text-align:left;">End</th>
-        <th>Q (kg)</th><th>A-grade</th><th>Waste%</th><th>T/put</th><th style="text-align:left;">Actions</th>
+        <th>Q (kg)</th><th>A-grade</th><th>Waste%</th><th style="text-align:left;">Actions</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -1109,8 +1064,7 @@ function exportHistory() {
   const hist = getHistory();
   if (!hist.length) { alert('No history to export'); return; }
   const hdrs = ['Saved At','Note','Line','Product','Start Date','Start Shift','End Date','End Shift',
-    'Material (kg)','Additives (kg)','Input (kg)','Q (kg)','UQ (kg)','Waste (kg)','Throughput',
-    'A-grade (%)','Waste (%)','Productivity (%)'];
+    'Q (kg)','UQ (kg)','Waste (kg)', 'A-grade (%)','Waste (%)'];
   const rows = [hdrs.join(';')];
   hist.forEach(e => {
     const p = e.data.production || e.data;
@@ -1118,13 +1072,8 @@ function exportHistory() {
       e.savedAt, (e.note||'').replace(/;/g,' '),
       e.params.line, e.params.productCode||'All',
       e.params.startDate, e.params.startShift, e.params.endDate, e.params.endShift,
-      Number(p.material||0).toFixed(2), Number(p.additives||0).toFixed(2),
-      Number(p.input||0).toFixed(2), Number(p.qualified||p.q||0).toFixed(2),
-      Number(p.unqualified||p.uq||0).toFixed(2), Number(p.waste||0).toFixed(2),
-      Number(p.throughput||0).toFixed(2),
-      (Number(p.agrade||0)*100).toFixed(2),
-      (Number(p.wastePct||p.wastePercent||0)*100).toFixed(2),
-      (Number(p.productivity||0)*100).toFixed(2)
+      Number(p.qualified||p.q||0).toFixed(2), Number(p.unqualified||p.uq||0).toFixed(2), Number(p.waste||0).toFixed(2),
+      (Number(p.agrade||0)*100).toFixed(2), (Number(p.wastePct||p.wastePercent||0)*100).toFixed(2)
     ].join(';'));
   });
   const blob = new Blob(['\uFEFF'+rows.join('\r\n')], {type:'text/csv;charset=utf-8;'});
@@ -1181,59 +1130,83 @@ function updateDetailNames() {
 }
 
 function getGroupDesc(g) {
-  const d = {M:'Material',S:'Separate',A:'Additives',Q:'Qualified',UQ:'Unqualified',P:'Time'};
+  const d = {M:'Material',S:'Separate/Waste',A:'Additives',Q:'Qualified',UQ:'Unqualified',P:'Time'};
   return d[g] || g;
 }
 
-async function runDetail() {
+function runDetail() {
   const btn = document.getElementById('d-calc-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="loading-spinner"></span>Loading...';
   setLoading(15);
 
-  const type = document.getElementById('d-type').value;
-  const group = document.getElementById('d-group').value;
-  const name = document.getElementById('d-name').value;
-
-  if (!type || !group) {
-    alert('Please select Type and Group!');
-    btn.disabled = false; btn.innerHTML = '▶ Calculate';
-    return;
-  }
-
   const params = {
-    action: 'detail',
     startDate:   document.getElementById('d-start').value,
     startShift:  document.getElementById('d-shift1').value,
     endDate:     document.getElementById('d-end').value,
     endShift:    document.getElementById('d-shift2').value,
     line:        document.getElementById('d-line').value,
     productCode: document.getElementById('d-product').value,
-    type, group, name
+    type: document.getElementById('d-type').value,
+    group: document.getElementById('d-group').value,
+    name: document.getElementById('d-name').value
   };
+
+  if (!params.type || !params.group) {
+    alert('Please select Type and Group!');
+    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    setLoading(100);
+    return;
+  }
 
   if (!params.startDate || !params.endDate) {
     alert('Please select start and end date!');
     btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    setLoading(100);
     return;
   }
 
-  try {
-    const r = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(params)
+  setTimeout(() => {
+    let pool = [];
+    if (params.line === 'NGR') pool = rawData.ngr || [];
+    else if (params.line === 'STA') pool = rawData.sta || [];
+    else pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
+
+    const ds = new Date(params.startDate); ds.setHours(0,0,0,0);
+    const de = new Date(params.endDate); de.setHours(23,59,59,999);
+
+    let filtered = pool.filter(r => {
+      const d = new Date(r.DATE);
+      if (isNaN(d) || d < ds || d > de) return false;
+
+      if (params.productCode !== 'All') {
+        const code = String(r["Product Code"] || "").toUpperCase();
+        if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
+        if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+      }
+      return true;
     });
-    setLoading(80);
-    const data = await r.json();
+
+    let totalVal = 0;
+    // Client side detail extraction mapping (Example logic using prefix based on Type/Group)
+    let searchPrefix = `${params.type}_${params.group}`; 
+    if (params.name !== 'All') searchPrefix += `_${params.name}`;
+
+    filtered.forEach(r => {
+      for(let k in r) {
+        if(k.startsWith(searchPrefix)) {
+           totalVal += (parseFloat(r[k]) || 0);
+        }
+      }
+    });
+
+    const data = { total: totalVal, items: [] };
     renderDetail(data, params);
-  } catch(err) {
-    alert('Error: ' + err.message);
-    console.error(err);
-  } finally {
+
     btn.disabled = false;
     btn.innerHTML = '▶ Calculate';
     setLoading(100);
-  }
+  }, 100);
 }
 
 function renderDetail(data, params) {
@@ -1245,38 +1218,18 @@ function renderDetail(data, params) {
 
   document.getElementById('detail-code').textContent = code.toUpperCase();
 
-  // Main value
   const total = data.total != null ? data.total : (data.value != null ? data.value : null);
   document.getElementById('detail-val').textContent = total != null ? Number(total).toLocaleString('en-US', {maximumFractionDigits:2}) + ' ' + unit : '—';
 
-  // Sub info
   const filters = [
     params.line !== 'All' ? `Line: ${params.line}` : 'All Lines',
     params.productCode !== 'All' ? `Product: ${params.productCode}` : 'All Products',
-    `${params.startDate} Shift ${params.startShift} → ${params.endDate} Shift ${params.endShift}`
+    `${params.startDate} → ${params.endDate}`
   ];
   document.getElementById('detail-sub').textContent = filters.join('  |  ');
 
-  // Breakdown table if available
-  const breakdown = data.breakdown || data.items || [];
-  if (breakdown.length) {
-    const rows = breakdown.map(item => `
-      <tr>
-        <td style="text-align:left;color:var(--accent2);">${item.name || item.label || '—'}</td>
-        <td>${Number(item.value||0).toLocaleString('en-US',{maximumFractionDigits:2})}</td>
-        <td>${item.pct != null ? (Number(item.pct)*100).toFixed(1)+'%' : '—'}</td>
-      </tr>`).join('');
-    document.getElementById('detail-breakdown').innerHTML = `
-      <div class="section-title" style="margin-bottom:12px;">BREAKDOWN</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th style="text-align:left;">Name</th><th>Value</th><th>Share</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-  } else {
-    document.getElementById('detail-breakdown').innerHTML = '';
-  }
+  // Xóa phần breakdown (do API mới test04 là data thô không phân chia các mục con như API cũ)
+  document.getElementById('detail-breakdown').innerHTML = '';
 }
 
 // ===================================================================
