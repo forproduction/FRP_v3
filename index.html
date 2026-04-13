@@ -320,7 +320,6 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   </div>
   <div class="nav-right">
     <span id="data-status" style="font-size:11px;color:var(--muted);"></span>
-    <!-- Nút Refresh Data hiển thị cho tất cả người dùng -->
     <button class="btn-refresh" onclick="refreshDashboard()">↺ Refresh Data</button>
   </div>
 </nav>
@@ -334,8 +333,10 @@ tbody tr.total-row td:first-child{color:var(--warn);}
       </div>
       <div class="sub-tabs" id="dash-product-tabs">
         <button class="sub-tab active" onclick="switchDashProduct('total',this)">TOTAL</button>
+        <button class="sub-tab" onclick="switchDashProduct('v04',this)">CFF-V04</button>
         <button class="sub-tab" onclick="switchDashProduct('v05',this)">CFF-V05</button>
         <button class="sub-tab" onclick="switchDashProduct('v0302',this)">CFF-V03-02</button>
+        <button class="sub-tab" onclick="switchDashProduct('v0303',this)">CFF-V03-03</button>
       </div>
     </div>
 
@@ -526,8 +527,10 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <div class="ctrl-label">PRODUCT CODE</div>
         <select id="d-product">
           <option value="All">All Products</option>
+          <option value="CFF-V04">CFF-V04</option>
           <option value="CFF-V05">CFF-V05</option>
           <option value="CFF-V03-02">CFF-V03-02</option>
+          <option value="CFF-V03-03">CFF-V03-03</option>
         </select>
       </div>
       <div class="ctrl-group">
@@ -687,8 +690,10 @@ function renderDashboard() {
   if (currentDashProduct !== "total") {
     pool = pool.filter(r => {
       const code = String(r["Product Code"] || "").toUpperCase();
+      if (currentDashProduct === "v04") return code.includes("V04");
       if (currentDashProduct === "v05") return code.includes("V05");
       if (currentDashProduct === "v0302") return code.includes("V03-02");
+      if (currentDashProduct === "v0303") return code.includes("V03-03");
       return false;
     });
   }
@@ -836,8 +841,10 @@ async function runSearch() {
 
       if (params.productCode !== 'All') {
         const code = String(r["Product Code"] || "").toUpperCase();
+        if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+        if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
       }
       return true;
     });
@@ -1182,8 +1189,10 @@ function runDetail() {
 
       if (params.productCode !== 'All') {
         const code = String(r["Product Code"] || "").toUpperCase();
+        if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+        if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
       }
       return true;
     });
