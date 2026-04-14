@@ -888,7 +888,7 @@ async function runSearch() {
     const aGrade = baseForWaste ? (Q / baseForWaste) * 100 : 0;
 
     // Do product = Qualified, ta dùng trực tiếp Q cho các tính toán efficiency và throughput
-    const efficiency = input ? (Q / input) * 100 : 0;
+    const efficiency = (output / input) * 100 : 0;
     const throughput = T_operation ? (Q / T_operation) * 60 : 0;
 
     const data = {
