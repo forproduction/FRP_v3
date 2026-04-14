@@ -90,7 +90,6 @@ input,select,button{font-family:var(--sans);}
 .btn-refresh{
   background:transparent;color:var(--muted);border:1px solid var(--border);
   padding:7px 14px;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;
-  /* Hiển thị nút refresh cho tất cả người dùng */
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -337,6 +336,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <button class="sub-tab" onclick="switchDashProduct('v05',this)">CFF-V05</button>
         <button class="sub-tab" onclick="switchDashProduct('v0302',this)">CFF-V03-02</button>
         <button class="sub-tab" onclick="switchDashProduct('v0303',this)">CFF-V03-03</button>
+        <button class="sub-tab" onclick="switchDashProduct('v10',this)">CFF-V10</button>
       </div>
     </div>
 
@@ -415,6 +415,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <option value="CFF-V05">CFF-V05</option>
           <option value="CFF-V03-02">CFF-V03-02</option>
           <option value="CFF-V03-03">CFF-V03-03</option>
+          <option value="CFF-V10">CFF-V10</option>
         </select>
       </div>
       <button class="btn-calc" id="s-calc-btn" onclick="runSearch()">▶ Calculate</button>
@@ -531,6 +532,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <option value="CFF-V05">CFF-V05</option>
           <option value="CFF-V03-02">CFF-V03-02</option>
           <option value="CFF-V03-03">CFF-V03-03</option>
+          <option value="CFF-V10">CFF-V10</option>
         </select>
       </div>
       <div class="ctrl-group">
@@ -694,6 +696,7 @@ function renderDashboard() {
       if (currentDashProduct === "v05") return code.includes("V05");
       if (currentDashProduct === "v0302") return code.includes("V03-02");
       if (currentDashProduct === "v0303") return code.includes("V03-03");
+      if (currentDashProduct === "v10") return code.includes("V10");
       return false;
     });
   }
@@ -845,34 +848,62 @@ async function runSearch() {
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
         if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
+        if (params.productCode === 'CFF-V10' && !code.includes('V10')) return false;
       }
       return true;
     });
 
     let Q = 0, UQ = 0, S = 0;
+    let M = 0, A = 0; 
     filtered.forEach(r => {
       for (let k in r) {
         let v = parseFloat(r[k]) || 0;
         if (k.startsWith("W_Q")) Q += v;
         if (k.startsWith("W_UQ")) UQ += v;
         if (k.startsWith("W_S")) S += v;
+        if (k.startsWith("W_M")) M += v;
+        if (k.startsWith("W_A")) A += v;
       }
     });
 
-    const total = Q + UQ;
-    const aGrade = total ? (Q / total) * 100 : 0;
-    const wastePct = total ? (S / total) * 100 : 0;
+    // Tính Throughput operation time
+    let T_operation = 0;
+    filtered.forEach(r => {
+        for (let k in r) {
+            if (k.startsWith("T_P_Operation")) {
+                T_operation += parseFloat(r[k]) || 0;
+            }
+        }
+    });
+
+    // ===== CÔNG THỨC MỚI THEO YÊU CẦU =====
+    const input = M + A;
+    const output = Q + UQ + S; 
+    
+    // Waste % = Waste / (Qualified + Unqualified)
+    const baseForWaste = Q + UQ; 
+    const wastePct = baseForWaste ? (S / baseForWaste) * 100 : 0;
+    
+    // A-grade = Qualified / (Qualified + Unqualified)
+    const aGrade = baseForWaste ? (Q / baseForWaste) * 100 : 0;
+
+    // Do product = Qualified, ta dùng trực tiếp Q cho các tính toán efficiency và throughput
+    const efficiency = input ? (Q / input) * 100 : 0;
+    const throughput = T_operation ? (Q / T_operation) * 60 : 0;
 
     const data = {
       production: {
+        material: M,
+        additives: A,
         qualified: Q,
         unqualified: UQ,
         waste: S,
-        output: total,
-        input: total + S,
+        input: input,
+        output: output,
+        throughput: throughput,
+        efficiency: efficiency,
         agrade: aGrade / 100,
         wastePct: wastePct / 100,
-        material: null, additives: null, throughput: null, productivity: null
       },
       quality: { iv: null, l: null, a: null, b: null },
       hourlyQuality: []
@@ -897,14 +928,62 @@ function renderSearch(d, params) {
   const agClass = aGrade < 99 ? 'v-danger' : 'v-accent2';
   const wClass = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
 
+  // Hiển thị giao diện 11 thẻ đúng thứ tự yêu cầu
   document.getElementById('s-prod-cards').innerHTML = `
-    <div class="metric-card"><div class="metric-label">QUALIFIED</div><div class="metric-value v-accent2">${fmt(prod.qualified)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">UNQUALIFIED</div><div class="metric-value v-danger">${fmt(prod.unqualified)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">WASTE</div><div class="metric-value v-warn">${fmt(prod.waste)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">TOTAL PRODUCT</div><div class="metric-value">${fmt(prod.output)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">INPUT (EST.)</div><div class="metric-value">${fmt(prod.input)}</div><div class="metric-unit">kg</div></div>
-    <div class="metric-card"><div class="metric-label">A-GRADE</div><div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div><div class="metric-unit">${aGrade < 99 && prod.output > 0 ? '⚠ Below target' : '✓ On target'}</div></div>
-    <div class="metric-card"><div class="metric-label">WASTE %</div><div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div><div class="metric-unit">${wastePct > 5.3 && prod.output > 0 ? '⚠ Above limit' : '✓ OK'}</div></div>
+      <div class="metric-card">
+          <div class="metric-label">MATERIAL</div>
+          <div class="metric-value v-accent">${fmt(prod.material)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">ADDITIVES</div>
+          <div class="metric-value v-accent2">${fmt(prod.additives)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">QUALIFIED</div>
+          <div class="metric-value v-accent2">${fmt(prod.qualified)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">UNQUALIFIED</div>
+          <div class="metric-value v-danger">${fmt(prod.unqualified)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">WASTE</div>
+          <div class="metric-value v-warn">${fmt(prod.waste)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">INPUT</div>
+          <div class="metric-value">${fmt(prod.input)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">OUTPUT</div>
+          <div class="metric-value">${fmt(prod.output)}</div>
+          <div class="metric-unit">kg</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">THROUGHPUT</div>
+          <div class="metric-value v-accent">${prod.throughput != null ? prod.throughput.toFixed(2) : '-'}</div>
+          <div class="metric-unit">kg/h</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">A-GRADE</div>
+          <div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">WASTE %</div>
+          <div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div>
+      </div>
+      <div class="metric-card">
+          <div class="metric-label">EFFICIENCY</div>
+          <div class="metric-value ${prod.efficiency < 95 ? 'v-danger' : 'v-accent2'}">
+              ${prod.efficiency ? prod.efficiency.toFixed(2) : '-'}%
+          </div>
+      </div>
   `;
 
   document.getElementById('s-quality-cards').innerHTML = `
@@ -1193,6 +1272,7 @@ function runDetail() {
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
         if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
+        if (params.productCode === 'CFF-V10' && !code.includes('V10')) return false;
       }
       return true;
     });
