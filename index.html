@@ -218,7 +218,8 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 .chart-canvas-wrap{position:relative;height:280px;}
 .chart-canvas-wrap canvas{max-height:280px;}
 
-.charts-grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-bottom:24px;}
+/* Đã chỉnh sửa lưới quality thành 2 cột 1 hàng */
+.charts-grid-4{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;}
 
 /* ===== QUALITY SECTION ===== */
 .quality-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
@@ -461,19 +462,19 @@ tbody tr.total-row td:first-child{color:var(--warn);}
       <div class="charts-grid-4" id="s-quality-charts">
         <div class="chart-box">
           <div class="chart-title">IV TREND</div>
-          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-iv"></canvas></div>
+          <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-iv"></canvas></div>
         </div>
         <div class="chart-box">
           <div class="chart-title">L* TREND</div>
-          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-l"></canvas></div>
+          <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-l"></canvas></div>
         </div>
         <div class="chart-box">
           <div class="chart-title">a* TREND</div>
-          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-a"></canvas></div>
+          <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-a"></canvas></div>
         </div>
         <div class="chart-box">
           <div class="chart-title">b* TREND</div>
-          <div class="chart-canvas-wrap" style="height:220px;"><canvas id="s-chart-b"></canvas></div>
+          <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-b"></canvas></div>
         </div>
       </div>
     </div>
@@ -651,7 +652,7 @@ const PALETTE = ['#00e5ff','#00ff9c','#fbbf24','#ff4560','#a78bfa','#34d399','#f
 const PALETTE2 = ['#00ff9c','#fbbf24']; 
 
 // ===================================================================
-// FETCH DATA (Client-side logic)
+// FETCH DATA
 // ===================================================================
 async function loadDashboard() {
   const cached = localStorage.getItem(CACHE_KEY);
@@ -703,7 +704,10 @@ function renderDashboard() {
 
   if (currentDashProduct !== "total") {
     pool = pool.filter(r => {
-      const code = String(r["Product Code"] || "").toUpperCase();
+      // Logic lọc chuẩn cho mọi biến thể tên cột Product Code
+      const rawCode = r["Product Code"] || r["PRODUCT CODE"] || r.ProductCode || r.productCode || r.product || r.Product || r.d || "";
+      const code = String(rawCode).toUpperCase().trim();
+      
       if (currentDashProduct === "v04") return code.includes("V04");
       if (currentDashProduct === "v05") return code.includes("V05");
       if (currentDashProduct === "v0302") return code.includes("V03-02");
@@ -738,8 +742,10 @@ function renderDashboard() {
   for (let m = 1; m <= 12; m++) {
     const d = months[m];
     const t = d.Q + d.UQ;
-    const ag = t ? (d.Q / t) * 100 : 0;
-    const wp = t ? (d.S / t) * 100 : 0;
+    
+    // Gán null nếu không có data để đồ thị k bị drop xuống 0
+    const ag = t > 0 ? (d.Q / t) * 100 : null;
+    const wp = t > 0 ? (d.S / t) * 100 : null;
 
     labels.push('M' + m);
     qArr.push(d.Q); uqArr.push(d.UQ); wasteArr.push(d.S);
@@ -747,8 +753,8 @@ function renderDashboard() {
 
     totalQ += d.Q; totalUQ += d.UQ; totalS += d.S;
 
-    const agClass = ag < 99 && t > 0 ? 'danger-cell' : 'ok-cell';
-    const wpClass = wp > 5.3 && t > 0 ? 'danger-cell' : 'ok-cell';
+    const agClass = ag !== null && ag < 99 && t > 0 ? 'danger-cell' : 'ok-cell';
+    const wpClass = wp !== null && wp > 5.3 && t > 0 ? 'danger-cell' : 'ok-cell';
 
     tbody += `<tr>
         <td>${MONTH_NAMES[m-1]}</td>
@@ -784,10 +790,20 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
   ['dash-chart-1','dash-chart-2'].forEach(id => {
     if (dashCharts[id]) dashCharts[id].destroy();
   });
+  
+  // Sửa lỗi autoSkip để hiện đủ dữ liệu trục X
   const scaleOpts = {
-    x: { ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'} },
-    y: { ticks:{color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}, beginAtZero:true }
+    x: { 
+      ticks: { color: '#6b7a8d', autoSkip: false, maxRotation: 45, minRotation: 45 }, 
+      grid: { color: 'rgba(255,255,255,0.04)' } 
+    },
+    y: { 
+      ticks: { color: '#6b7a8d' }, 
+      grid: { color: 'rgba(255,255,255,0.04)' }, 
+      beginAtZero: true 
+    }
   };
+  
   dashCharts['dash-chart-1'] = new Chart(document.getElementById('dash-chart-1').getContext('2d'), {
     type:'line',
     data:{ labels, datasets:[
@@ -802,8 +818,8 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
   dashCharts['dash-chart-2'] = new Chart(document.getElementById('dash-chart-2').getContext('2d'), {
     type:'line',
     data:{ labels, datasets:[
-      {label:'A-grade (%)', data:ag, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:0.3, pointRadius:4, fill:true},
-      {label:'Waste (%)', data:wp, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true}
+      {label:'A-grade (%)', data:ag, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true},
+      {label:'Waste (%)', data:wp, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true}
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#8a97a6',boxWidth:12}}},
@@ -816,18 +832,9 @@ const MONTH_NAMES = ['January','February','March','April','May','June','July','A
 // ===================================================================
 // SHIFT UTILS
 // ===================================================================
-/**
- * Returns {start: Date, end: Date} for a given date string + shift code.
- * Shift A: 20:00 day-1 → 07:59:59 day
- * Shift B: 08:00 → 19:59:59 day
- * Shift 1: 00:00 → 07:59:59 day
- * Shift 2: 08:00 → 15:59:59 day
- * Shift 3: 16:00 → 23:59:59 day
- */
 function shiftStart(dateStr, shift) {
   const d = new Date(dateStr);
   if (shift === 'A') {
-    // 20:00 of previous day
     const prev = new Date(d);
     prev.setDate(prev.getDate() - 1);
     prev.setHours(20, 0, 0, 0);
@@ -884,7 +891,6 @@ async function runSearch() {
     else if (params.line === 'STA') pool = rawData.sta || [];
     else pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
 
-    // Shift-aware date range
     const ds = shiftStart(params.startDate, params.startShift);
     const de = shiftEnd(params.endDate, params.endShift);
 
@@ -893,7 +899,9 @@ async function runSearch() {
       if (isNaN(d) || d < ds || d > de) return false;
 
       if (params.productCode !== 'All') {
-        const code = String(r["Product Code"] || "").toUpperCase();
+        const rawCode = r["Product Code"] || r["PRODUCT CODE"] || r.ProductCode || r.productCode || r.product || r.Product || r.d || "";
+        const code = String(rawCode).toUpperCase().trim();
+        
         if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
@@ -905,10 +913,7 @@ async function runSearch() {
 
     let Q = 0, UQ = 0, S = 0;
     let M = 0, A = 0;
-
-    // Material breakdown: W_M_<Name>
     let matBreakdown = {};
-    // Additives breakdown: W_A_<Name>
     let addBreakdown = {};
 
     filtered.forEach(r => {
@@ -919,7 +924,6 @@ async function runSearch() {
         if (k.startsWith("W_S")) S += v;
         if (k.startsWith("W_M")) {
           M += v;
-          // Extract sub-name: W_M_PLHG → PLHG
           const parts = k.split('_');
           const name = parts.slice(2).join('_') || k;
           matBreakdown[name] = (matBreakdown[name] || 0) + v;
@@ -950,7 +954,6 @@ async function runSearch() {
     const efficiency = input ? (output / input) * 100 : 0;
     const throughput = T_operation ? (Q / T_operation) * 60 : 0;
 
-    // Quality data from rawData.quality (sheet Quality)
     let qualityPool = [];
     if (rawData.quality && Array.isArray(rawData.quality)) {
       qualityPool = rawData.quality.filter(r => {
@@ -961,7 +964,8 @@ async function runSearch() {
           if (line !== params.line) return false;
         }
         if (params.productCode !== 'All') {
-          const code = String(r.d || r.product || r["Product Code"] || "").toUpperCase();
+          const rawCode = r["Product Code"] || r["PRODUCT CODE"] || r.ProductCode || r.productCode || r.product || r.Product || r.d || "";
+          const code = String(rawCode).toUpperCase().trim();
           if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
           if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
           if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
@@ -972,24 +976,17 @@ async function runSearch() {
       });
     }
 
-    // Compute averages for IV, L, a, b
     function avg(arr, key) {
       const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v) && v > 0);
       if (!vals.length) return null;
       return vals.reduce((s, v) => s + v, 0) / vals.length;
     }
 
-    const ivKey  = 'IV';
-    const lKey   = 'L';
-    const aKey   = 'a';
-    const bKey   = 'b';
+    const avgIV = avg(qualityPool, 'IV');
+    const avgL  = avg(qualityPool, 'L');
+    const avgA  = avg(qualityPool, 'a');
+    const avgB  = avg(qualityPool, 'b');
 
-    const avgIV = avg(qualityPool, ivKey);
-    const avgL  = avg(qualityPool, lKey);
-    const avgA  = avg(qualityPool, aKey);
-    const avgB  = avg(qualityPool, bKey);
-
-    // Build time-series for trend charts (sorted by date)
     const qualSorted = [...qualityPool].sort((x,y) => {
       return new Date(x.ProdDate||x.proddate||x.DATE||x.date) - new Date(y.ProdDate||y.proddate||y.DATE||y.date);
     });
@@ -997,10 +994,10 @@ async function runSearch() {
       const d = new Date(r.ProdDate||r.proddate||r.DATE||r.date);
       return isNaN(d) ? '' : d.toLocaleDateString('vi-VN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     });
-    const trendIV = qualSorted.map(r => parseFloat(r[ivKey]) || null);
-    const trendL  = qualSorted.map(r => parseFloat(r[lKey])  || null);
-    const trendA  = qualSorted.map(r => parseFloat(r[aKey])  || null);
-    const trendB  = qualSorted.map(r => parseFloat(r[bKey])  || null);
+    const trendIV = qualSorted.map(r => parseFloat(r['IV']) || null);
+    const trendL  = qualSorted.map(r => parseFloat(r['L'])  || null);
+    const trendA  = qualSorted.map(r => parseFloat(r['a'])  || null);
+    const trendB  = qualSorted.map(r => parseFloat(r['b'])  || null);
 
     const data = {
       production: {
@@ -1092,7 +1089,6 @@ function renderSearch(d, params) {
     </div>
   `;
 
-  // Quality averages
   const fmtQ = v => v != null ? Number(v).toFixed(3) : '-';
   document.getElementById('s-quality-cards').innerHTML = `
     <div class="metric-card">
@@ -1116,7 +1112,6 @@ function renderSearch(d, params) {
   drawSearchCharts(d, aGrade, wastePct);
 }
 
-
 function drawSearchCharts(d, aGrade, wastePct) {
   Object.values(searchCharts).forEach(c => { try { c.destroy(); } catch(e){} });
   searchCharts = {};
@@ -1132,7 +1127,6 @@ function drawSearchCharts(d, aGrade, wastePct) {
     }
   });
 
-  // ---- MATERIAL COMPOSITION PIE ----
   const matData = prod.matBreakdown || {};
   const matLabels = Object.keys(matData).filter(k => matData[k] > 0);
   const matVals = matLabels.map(k => matData[k]);
@@ -1149,7 +1143,6 @@ function drawSearchCharts(d, aGrade, wastePct) {
     ctx.fillText('No data', ctx.canvas.width/2, ctx.canvas.height/2);
   }
 
-  // ---- ADDITIVES COMPOSITION PIE ----
   const addData = prod.addBreakdown || {};
   const addLabels = Object.keys(addData).filter(k => addData[k] > 0);
   const addVals = addLabels.map(k => addData[k]);
@@ -1166,7 +1159,6 @@ function drawSearchCharts(d, aGrade, wastePct) {
     ctx.fillText('No data', ctx.canvas.width/2, ctx.canvas.height/2);
   }
 
-  // ---- KPI BAR ----
   const targetPlugin = {
     id:'targetLines',
     afterDatasetsDraw(chart) {
@@ -1207,9 +1199,9 @@ function drawSearchCharts(d, aGrade, wastePct) {
     }
   });
 
-  // ---- QUALITY TREND CHARTS ----
+  // Chỉnh sửa để hiển thị đủ tên phần tử tại trục X (display: true và autoSkip: false)
   const trendScaleOpts = {
-    x:{ display: false },
+    x:{ display: true, ticks: { color: '#6b7a8d', font: { size: 10 }, autoSkip: false, maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
     y:{ ticks:{color:'#6b7a8d',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
   };
   const trendOpts = (color) => ({
@@ -1458,7 +1450,9 @@ function runDetail() {
       if (isNaN(d) || d < ds || d > de) return false;
 
       if (params.productCode !== 'All') {
-        const code = String(r["Product Code"] || "").toUpperCase();
+        const rawCode = r["Product Code"] || r["PRODUCT CODE"] || r.ProductCode || r.productCode || r.product || r.Product || r.d || "";
+        const code = String(rawCode).toUpperCase().trim();
+        
         if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
         if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
         if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
