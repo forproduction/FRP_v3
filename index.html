@@ -384,11 +384,11 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <div class="ctrl-row">
           <input type="date" id="s-start">
           <select id="s-shift1">
-            <option value="A">Shift A (20:00→07:59)</option>
-            <option value="B">Shift B (08:00→19:59)</option>
-            <option value="1">Shift 1 (00:00→07:59)</option>
-            <option value="2">Shift 2 (08:00→15:59)</option>
-            <option value="3">Shift 3 (16:00→23:59)</option>
+            <option value="A">Shift A (20:00-07:59)</option>
+            <option value="B">Shift B (08:00-19:59)</option>
+            <option value="1">Shift 1 (00:00-07:59)</option>
+            <option value="2">Shift 2 (08:00-15:59)</option>
+            <option value="3">Shift 3 (16:00-23:59)</option>
           </select>
         </div>
       </div>
@@ -397,11 +397,11 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <div class="ctrl-row">
           <input type="date" id="s-end">
           <select id="s-shift2">
-            <option value="B">Shift B (08:00→19:59)</option>
-            <option value="A">Shift A (20:00→07:59)</option>
-            <option value="1">Shift 1 (00:00→07:59)</option>
-            <option value="2">Shift 2 (08:00→15:59)</option>
-            <option value="3">Shift 3 (16:00→23:59)</option>
+            <option value="B">Shift B (08:00-19:59)</option>
+            <option value="A">Shift A (20:00-07:59)</option>
+            <option value="1">Shift 1 (00:00-07:59)</option>
+            <option value="2">Shift 2 (08:00-15:59)</option>
+            <option value="3">Shift 3 (16:00-23:59)</option>
           </select>
         </div>
       </div>
@@ -507,11 +507,11 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <div class="ctrl-row">
           <input type="date" id="d-start">
           <select id="d-shift1">
-            <option value="A">Shift A (20:00→07:59)</option>
-            <option value="B">Shift B (08:00→19:59)</option>
-            <option value="1">Shift 1 (00:00→07:59)</option>
-            <option value="2">Shift 2 (08:00→15:59)</option>
-            <option value="3">Shift 3 (16:00→23:59)</option>
+            <option value="A">Shift A (20:00-07:59)</option>
+            <option value="B">Shift B (08:00-19:59)</option>
+            <option value="1">Shift 1 (00:00-07:59)</option>
+            <option value="2">Shift 2 (08:00-15:59)</option>
+            <option value="3">Shift 3 (16:00-23:59)</option>
           </select>
         </div>
       </div>
@@ -520,11 +520,11 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <div class="ctrl-row">
           <input type="date" id="d-end">
           <select id="d-shift2">
-            <option value="B">Shift B (08:00→19:59)</option>
-            <option value="A">Shift A (20:00→07:59)</option>
-            <option value="1">Shift 1 (00:00→07:59)</option>
-            <option value="2">Shift 2 (08:00→15:59)</option>
-            <option value="3">Shift 3 (16:00→23:59)</option>
+            <option value="B">Shift B (08:00-19:59)</option>
+            <option value="A">Shift A (20:00-07:59)</option>
+            <option value="1">Shift 1 (00:00-07:59)</option>
+            <option value="2">Shift 2 (08:00-15:59)</option>
+            <option value="3">Shift 3 (16:00-23:59)</option>
           </select>
         </div>
       </div>
@@ -585,7 +585,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 // ===================================================================
 // CONFIG & STATE
 // ===================================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbyGE-B-F5Y30F_wvZdwrHm5RREcq78La9DytPDWM2EEarjXPYGvdP88h3LF-gZAj3-5/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbweiEb2DXKl0u3PeQ7y5LPKAtaUQYBJgPldmCxcb4H11vsM7H8IfHIMXhLEgfZALtPlAg/exec";
 const CACHE_KEY = "frp2_dash_cache_v4";
 const CACHE_TTL = 3600000; // 1hr
 
@@ -814,18 +814,44 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // ===================================================================
-// SHIFT UTILS (dùng cho client-side fallback và display)
+// SHIFT UTILS
 // ===================================================================
-const SHIFT_DEF = {
-  A: { startH:20, startPrev:true, endH:7,  endM:59 },
-  B: { startH:8,  startPrev:false, endH:19, endM:59 },
-  '1':{ startH:0,  startPrev:false, endH:7,  endM:59 },
-  '2':{ startH:8,  startPrev:false, endH:15, endM:59 },
-  '3':{ startH:16, startPrev:false, endH:23, endM:59 },
-};
+/**
+ * Returns {start: Date, end: Date} for a given date string + shift code.
+ * Shift A: 20:00 day-1 → 07:59:59 day
+ * Shift B: 08:00 → 19:59:59 day
+ * Shift 1: 00:00 → 07:59:59 day
+ * Shift 2: 08:00 → 15:59:59 day
+ * Shift 3: 16:00 → 23:59:59 day
+ */
+function shiftStart(dateStr, shift) {
+  const d = new Date(dateStr);
+  if (shift === 'A') {
+    // 20:00 of previous day
+    const prev = new Date(d);
+    prev.setDate(prev.getDate() - 1);
+    prev.setHours(20, 0, 0, 0);
+    return prev;
+  }
+  if (shift === 'B') { const t = new Date(d); t.setHours(8,0,0,0); return t; }
+  if (shift === '1') { const t = new Date(d); t.setHours(0,0,0,0); return t; }
+  if (shift === '2') { const t = new Date(d); t.setHours(8,0,0,0); return t; }
+  if (shift === '3') { const t = new Date(d); t.setHours(16,0,0,0); return t; }
+  return new Date(d);
+}
+
+function shiftEnd(dateStr, shift) {
+  const d = new Date(dateStr);
+  if (shift === 'A') { const t = new Date(d); t.setHours(7,59,59,999); return t; }
+  if (shift === 'B') { const t = new Date(d); t.setHours(19,59,59,999); return t; }
+  if (shift === '1') { const t = new Date(d); t.setHours(7,59,59,999); return t; }
+  if (shift === '2') { const t = new Date(d); t.setHours(15,59,59,999); return t; }
+  if (shift === '3') { const t = new Date(d); t.setHours(23,59,59,999); return t; }
+  const t = new Date(d); t.setHours(23,59,59,999); return t;
+}
 
 // ===================================================================
-// SEARCH LOGIC (Server-side via POST)
+// SEARCH LOGIC
 // ===================================================================
 let searchCharts = {};
 let pendingSave = null;
@@ -837,11 +863,11 @@ async function runSearch() {
   setLoading(10);
 
   const params = {
-    startDate:   document.getElementById('s-start').value,
-    startShift:  document.getElementById('s-shift1').value,
-    endDate:     document.getElementById('s-end').value,
-    endShift:    document.getElementById('s-shift2').value,
-    line:        document.getElementById('s-line').value,
+    startDate:  document.getElementById('s-start').value,
+    startShift: document.getElementById('s-shift1').value,
+    endDate:    document.getElementById('s-end').value,
+    endShift:   document.getElementById('s-shift2').value,
+    line:       document.getElementById('s-line').value,
     productCode: document.getElementById('s-product').value
   };
 
@@ -852,49 +878,163 @@ async function runSearch() {
     return;
   }
 
-  try {
-    setLoading(30);
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'search', ...params })
-    });
-    setLoading(70);
-    const result = await res.json();
+  setTimeout(() => {
+    let pool = [];
+    if (params.line === 'NGR') pool = rawData.ngr || [];
+    else if (params.line === 'STA') pool = rawData.sta || [];
+    else pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
 
-    if (result.error) {
-      alert('Server error: ' + result.error);
-      btn.disabled = false; btn.innerHTML = '▶ Calculate';
-      setLoading(100);
-      return;
+    // Shift-aware date range
+    const ds = shiftStart(params.startDate, params.startShift);
+    const de = shiftEnd(params.endDate, params.endShift);
+
+    let filtered = pool.filter(r => {
+      const d = new Date(r.DATE);
+      if (isNaN(d) || d < ds || d > de) return false;
+
+      if (params.productCode !== 'All') {
+        const code = String(r["Product Code"] || "").toUpperCase();
+        if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
+        if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
+        if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+        if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
+        if (params.productCode === 'CFF-V10' && !code.includes('V10')) return false;
+      }
+      return true;
+    });
+
+    let Q = 0, UQ = 0, S = 0;
+    let M = 0, A = 0;
+
+    // Material breakdown: W_M_<Name>
+    let matBreakdown = {};
+    // Additives breakdown: W_A_<Name>
+    let addBreakdown = {};
+
+    filtered.forEach(r => {
+      for (let k in r) {
+        let v = parseFloat(r[k]) || 0;
+        if (k.startsWith("W_Q")) Q += v;
+        if (k.startsWith("W_UQ")) UQ += v;
+        if (k.startsWith("W_S")) S += v;
+        if (k.startsWith("W_M")) {
+          M += v;
+          // Extract sub-name: W_M_PLHG → PLHG
+          const parts = k.split('_');
+          const name = parts.slice(2).join('_') || k;
+          matBreakdown[name] = (matBreakdown[name] || 0) + v;
+        }
+        if (k.startsWith("W_A")) {
+          A += v;
+          const parts = k.split('_');
+          const name = parts.slice(2).join('_') || k;
+          addBreakdown[name] = (addBreakdown[name] || 0) + v;
+        }
+      }
+    });
+
+    let T_operation = 0;
+    filtered.forEach(r => {
+      for (let k in r) {
+        if (k.startsWith("T_P_Operation")) {
+          T_operation += parseFloat(r[k]) || 0;
+        }
+      }
+    });
+
+    const input = M + A;
+    const output = Q + UQ + S;
+    const baseForWaste = Q + UQ;
+    const wastePct = baseForWaste ? (S / baseForWaste) * 100 : 0;
+    const aGrade = baseForWaste ? (Q / baseForWaste) * 100 : 0;
+    const efficiency = input ? (output / input) * 100 : 0;
+    const throughput = T_operation ? (Q / T_operation) * 60 : 0;
+
+    // Quality data from rawData.quality (sheet Quality)
+    let qualityPool = [];
+    if (rawData.quality && Array.isArray(rawData.quality)) {
+      qualityPool = rawData.quality.filter(r => {
+        const d = new Date(r.ProdDate || r.proddate || r.DATE || r.date);
+        if (isNaN(d) || d < ds || d > de) return false;
+        if (params.line !== 'All') {
+          const line = String(r.LINE || r.line || '').toUpperCase();
+          if (line !== params.line) return false;
+        }
+        if (params.productCode !== 'All') {
+          const code = String(r.d || r.product || r["Product Code"] || "").toUpperCase();
+          if (params.productCode === 'CFF-V04' && !code.includes('V04')) return false;
+          if (params.productCode === 'CFF-V05' && !code.includes('V05')) return false;
+          if (params.productCode === 'CFF-V03-02' && !code.includes('V03-02')) return false;
+          if (params.productCode === 'CFF-V03-03' && !code.includes('V03-03')) return false;
+          if (params.productCode === 'CFF-V10' && !code.includes('V10')) return false;
+        }
+        return true;
+      });
     }
 
-    renderSearch(result, params);
-    pendingSave = { data: result, params };
+    // Compute averages for IV, L, a, b
+    function avg(arr, key) {
+      const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v) && v > 0);
+      if (!vals.length) return null;
+      return vals.reduce((s, v) => s + v, 0) / vals.length;
+    }
+
+    const ivKey  = 'IV';
+    const lKey   = 'L';
+    const aKey   = 'a';
+    const bKey   = 'b';
+
+    const avgIV = avg(qualityPool, ivKey);
+    const avgL  = avg(qualityPool, lKey);
+    const avgA  = avg(qualityPool, aKey);
+    const avgB  = avg(qualityPool, bKey);
+
+    // Build time-series for trend charts (sorted by date)
+    const qualSorted = [...qualityPool].sort((x,y) => {
+      return new Date(x.ProdDate||x.proddate||x.DATE||x.date) - new Date(y.ProdDate||y.proddate||y.DATE||y.date);
+    });
+    const trendLabels = qualSorted.map(r => {
+      const d = new Date(r.ProdDate||r.proddate||r.DATE||r.date);
+      return isNaN(d) ? '' : d.toLocaleDateString('vi-VN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    });
+    const trendIV = qualSorted.map(r => parseFloat(r[ivKey]) || null);
+    const trendL  = qualSorted.map(r => parseFloat(r[lKey])  || null);
+    const trendA  = qualSorted.map(r => parseFloat(r[aKey])  || null);
+    const trendB  = qualSorted.map(r => parseFloat(r[bKey])  || null);
+
+    const data = {
+      production: {
+        material: M, additives: A,
+        qualified: Q, unqualified: UQ, waste: S,
+        input, output, throughput, efficiency,
+        agrade: aGrade / 100, wastePct: wastePct / 100,
+        matBreakdown, addBreakdown
+      },
+      quality: { avgIV, avgL, avgA, avgB },
+      qualityTrend: { labels: trendLabels, iv: trendIV, l: trendL, a: trendA, b: trendB }
+    };
+
+    renderSearch(data, params);
+    pendingSave = { data, params };
+
     document.getElementById('s-save-bar').style.display = 'flex';
     document.getElementById('s-production-section').style.display = 'block';
 
-  } catch(err) {
-    console.error(err);
-    alert('Lỗi kết nối API. Kiểm tra lại mạng hoặc Apps Script.');
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '▶ Calculate';
-  setLoading(100);
+    btn.disabled = false;
+    btn.innerHTML = '▶ Calculate';
+    setLoading(100);
+  }, 100);
 }
 
 function renderSearch(d, params) {
-  const prod = d.production || {};
-  const qual = d.quality   || {};
+  const prod = d.production;
+  const qual = d.quality || {};
   const trend = d.qualityTrend || {};
+  const aGrade = Number(prod.agrade||0) * 100;
+  const wastePct = Number(prod.wastePct||0) * 100;
+  const agClass = aGrade < 99 ? 'v-danger' : 'v-accent2';
+  const wClass = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
 
-  const aGrade  = Number(prod.agrade  || 0) * 100;
-  const wastePct = Number(prod.wastePct || 0) * 100;
-  const agClass = aGrade  < 99  ? 'v-danger' : 'v-accent2';
-  const wClass  = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
-
-  // ---- Production metric cards ----
   document.getElementById('s-prod-cards').innerHTML = `
     <div class="metric-card">
       <div class="metric-label">MATERIAL</div>
@@ -933,7 +1073,7 @@ function renderSearch(d, params) {
     </div>
     <div class="metric-card">
       <div class="metric-label">THROUGHPUT</div>
-      <div class="metric-value v-accent">${prod.throughput != null ? Number(prod.throughput).toFixed(2) : '-'}</div>
+      <div class="metric-value v-accent">${prod.throughput != null ? prod.throughput.toFixed(2) : '-'}</div>
       <div class="metric-unit">kg/h</div>
     </div>
     <div class="metric-card">
@@ -946,14 +1086,14 @@ function renderSearch(d, params) {
     </div>
     <div class="metric-card">
       <div class="metric-label">EFFICIENCY</div>
-      <div class="metric-value ${(prod.efficiency||0) < 95 ? 'v-danger' : 'v-accent2'}">
-        ${prod.efficiency != null ? Number(prod.efficiency).toFixed(2) + '%' : '-'}
+      <div class="metric-value ${prod.efficiency < 95 ? 'v-danger' : 'v-accent2'}">
+        ${prod.efficiency ? prod.efficiency.toFixed(2) : '-'}%
       </div>
     </div>
   `;
 
-  // ---- Quality average cards ----
-  const fmtQ = v => (v != null && !isNaN(v)) ? Number(v).toFixed(3) : '-';
+  // Quality averages
+  const fmtQ = v => v != null ? Number(v).toFixed(3) : '-';
   document.getElementById('s-quality-cards').innerHTML = `
     <div class="metric-card">
       <div class="metric-label">IV (avg)</div>
@@ -973,68 +1113,64 @@ function renderSearch(d, params) {
     </div>
   `;
 
-  drawSearchCharts(prod, qual, trend, aGrade, wastePct);
+  drawSearchCharts(d, aGrade, wastePct);
 }
 
-function drawSearchCharts(prod, qual, trend, aGrade, wastePct) {
+
+function drawSearchCharts(d, aGrade, wastePct) {
   Object.values(searchCharts).forEach(c => { try { c.destroy(); } catch(e){} });
   searchCharts = {};
+
+  const prod = d.production;
+  const trend = d.qualityTrend || {};
+
+  const pieOpts = (title) => ({
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#8a97a6', boxWidth: 12, font: { size: 11 }, padding: 8 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)} kg (${ctx.dataset.data.length ? (ctx.raw / ctx.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1) : 0}%)` } }
+    }
+  });
 
   // ---- MATERIAL COMPOSITION PIE ----
   const matData = prod.matBreakdown || {};
   const matLabels = Object.keys(matData).filter(k => matData[k] > 0);
-  const matVals   = matLabels.map(k => matData[k]);
-  const matTotal  = matVals.reduce((s,v)=>s+v,0);
-
+  const matVals = matLabels.map(k => matData[k]);
   if (matLabels.length > 0) {
     searchCharts.matPie = new Chart(document.getElementById('s-mat-pie').getContext('2d'), {
       type: 'doughnut',
-      data: {
-        labels: matLabels,
-        datasets: [{ data: matVals, backgroundColor: PALETTE, borderWidth: 2, borderColor: '#0f1520' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { position:'bottom', labels:{ color:'#8a97a6', boxWidth:12, font:{size:11}, padding:8 } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)} kg (${matTotal ? (ctx.raw/matTotal*100).toFixed(1) : 0}%)` } }
-        }
-      }
+      data: { labels: matLabels, datasets: [{ data: matVals, backgroundColor: PALETTE, borderWidth: 2, borderColor: '#0f1520' }] },
+      options: pieOpts('Material Composition')
     });
   } else {
-    _drawEmpty(document.getElementById('s-mat-pie'), 'No material data');
+    const ctx = document.getElementById('s-mat-pie').getContext('2d');
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = '#6b7a8d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('No data', ctx.canvas.width/2, ctx.canvas.height/2);
   }
 
   // ---- ADDITIVES COMPOSITION PIE ----
-  const addData   = prod.addBreakdown || {};
+  const addData = prod.addBreakdown || {};
   const addLabels = Object.keys(addData).filter(k => addData[k] > 0);
-  const addVals   = addLabels.map(k => addData[k]);
-  const addTotal  = addVals.reduce((s,v)=>s+v,0);
-
+  const addVals = addLabels.map(k => addData[k]);
   if (addLabels.length > 0) {
     searchCharts.addPie = new Chart(document.getElementById('s-add-pie').getContext('2d'), {
       type: 'doughnut',
-      data: {
-        labels: addLabels,
-        datasets: [{ data: addVals, backgroundColor: PALETTE.slice(2), borderWidth: 2, borderColor: '#0f1520' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { position:'bottom', labels:{ color:'#8a97a6', boxWidth:12, font:{size:11}, padding:8 } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)} kg (${addTotal ? (ctx.raw/addTotal*100).toFixed(1) : 0}%)` } }
-        }
-      }
+      data: { labels: addLabels, datasets: [{ data: addVals, backgroundColor: PALETTE.slice(2), borderWidth: 2, borderColor: '#0f1520' }] },
+      options: pieOpts('Additives Composition')
     });
   } else {
-    _drawEmpty(document.getElementById('s-add-pie'), 'No additives data');
+    const ctx = document.getElementById('s-add-pie').getContext('2d');
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = '#6b7a8d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('No data', ctx.canvas.width/2, ctx.canvas.height/2);
   }
 
   // ---- KPI BAR ----
   const targetPlugin = {
-    id: 'targetLines',
+    id:'targetLines',
     afterDatasetsDraw(chart) {
-      const {ctx, scales:{y}} = chart;
+      const {ctx, scales:{y}, data} = chart;
       if (!y) return;
       ctx.save();
       [[99,'#00ff9c',0],[5.3,'#ff4560',1]].forEach(([val, color, barIdx]) => {
@@ -1044,7 +1180,7 @@ function drawSearchCharts(prod, qual, trend, aGrade, wastePct) {
         const bar = meta0.data[barIdx];
         const x1 = bar.x - bar.width/2 - 4, x2 = bar.x + bar.width/2 + 4;
         ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
-        ctx.beginPath(); ctx.moveTo(x1,yPx); ctx.lineTo(x2,yPx); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x1, yPx); ctx.lineTo(x2, yPx); ctx.stroke();
         ctx.setLineDash([]); ctx.fillStyle = color; ctx.font = '10px monospace';
         ctx.fillText(val+'%', x2+4, yPx+3);
       });
@@ -1053,17 +1189,17 @@ function drawSearchCharts(prod, qual, trend, aGrade, wastePct) {
   };
 
   searchCharts.kpiBar = new Chart(document.getElementById('s-kpi-bar').getContext('2d'), {
-    type: 'bar',
+    type:'bar',
     data: {
-      labels: ['A-grade','Waste %'],
-      datasets: [{ label:'%', data:[aGrade, wastePct],
+      labels:['A-grade','Waste %'],
+      datasets:[{ label:'%', data:[aGrade, wastePct],
         backgroundColor:[aGrade<99?'#ff4560':'#00ff9c', wastePct>5.3?'#ff4560':'#00ff9c'],
         borderRadius:6, borderWidth:0 }]
     },
-    plugins: [targetPlugin],
-    options: {
+    plugins:[targetPlugin],
+    options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false} },
+      plugins:{legend:{display:false}},
       scales:{
         y:{beginAtZero:true, ticks:{callback:v=>v+'%',color:'#6b7a8d'}, grid:{color:'rgba(255,255,255,0.04)'}},
         x:{ticks:{color:'#6b7a8d'}, grid:{display:false}}
@@ -1072,46 +1208,37 @@ function drawSearchCharts(prod, qual, trend, aGrade, wastePct) {
   });
 
   // ---- QUALITY TREND CHARTS ----
-  const trendLabels = trend.labels || [];
-  const trendCfg = [
-    { id:'s-chart-iv', data: trend.iv, color:'#00e5ff', label:'IV' },
-    { id:'s-chart-l',  data: trend.l,  color:'#00ff9c', label:'L*' },
-    { id:'s-chart-a',  data: trend.a,  color:'#fbbf24', label:'a*' },
-    { id:'s-chart-b',  data: trend.b,  color:'#a78bfa', label:'b*' },
+  const trendScaleOpts = {
+    x:{ display: false },
+    y:{ ticks:{color:'#6b7a8d',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
+  };
+  const trendOpts = (color) => ({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ title: (items) => trend.labels[items[0].dataIndex] || '' } } },
+    scales: trendScaleOpts,
+    elements:{ point:{ radius:2, hoverRadius:4 } }
+  });
+
+  const trendDatasets = [
+    { canvasId:'s-chart-iv', data: trend.iv, color:'#00e5ff' },
+    { canvasId:'s-chart-l',  data: trend.l,  color:'#00ff9c' },
+    { canvasId:'s-chart-a',  data: trend.a,  color:'#fbbf24' },
+    { canvasId:'s-chart-b',  data: trend.b,  color:'#a78bfa' },
   ];
 
-  trendCfg.forEach(({ id, data: tData, color, label }) => {
-    if (!tData || !tData.length || tData.every(v => v == null)) {
-      _drawEmpty(document.getElementById(id), 'No quality data');
-      return;
-    }
-    searchCharts[id] = new Chart(document.getElementById(id).getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: trendLabels,
-        datasets: [{ label, data: tData, borderColor: color,
-          backgroundColor: color + '18', tension:0.3, fill:true, spanGaps:true,
-          pointRadius:2, pointHoverRadius:4 }]
+  trendDatasets.forEach(({ canvasId, data: tData, color }) => {
+    const labels = trend.labels || [];
+    if (!tData || !tData.length || tData.every(v => v == null)) return;
+    searchCharts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{ data: tData, borderColor: color, backgroundColor: color+'18',
+          tension:0.3, fill:true, spanGaps:true }]
       },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          x:{ display: trendLabels.length <= 50, ticks:{color:'#6b7a8d',font:{size:9},maxRotation:45}, grid:{color:'rgba(255,255,255,0.04)'} },
-          y:{ ticks:{color:'#6b7a8d',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
-        }
-      }
+      options: trendOpts(color)
     });
   });
-}
-
-function _drawEmpty(canvas, msg) {
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#6b7a8d'; ctx.font = '12px sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(msg, canvas.width/2, canvas.height/2);
 }
 
 
@@ -1323,8 +1450,8 @@ function runDetail() {
     else if (params.line === 'STA') pool = rawData.sta || [];
     else pool = [...(rawData.ngr || []), ...(rawData.sta || [])];
 
-    const ds = new Date(params.startDate); ds.setHours(0,0,0,0);
-    const de = new Date(params.endDate); de.setHours(23,59,59,999);
+    const ds = shiftStart(params.startDate, params.startShift);
+    const de = shiftEnd(params.endDate, params.endShift);
 
     let filtered = pool.filter(r => {
       const d = new Date(r.DATE);
