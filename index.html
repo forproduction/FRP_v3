@@ -977,15 +977,37 @@ async function runSearch() {
     }
 
     function avg(arr, key) {
-      const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v) && v > 0);
+      const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v));
       if (!vals.length) return null;
       return vals.reduce((s, v) => s + v, 0) / vals.length;
+    }
+
+    function minVal(arr, key) {
+      const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v));
+      if (!vals.length) return null;
+      return Math.min(...vals);
+    }
+
+    function maxVal(arr, key) {
+      const vals = arr.map(r => parseFloat(r[key])).filter(v => !isNaN(v));
+      if (!vals.length) return null;
+      return Math.max(...vals);
     }
 
     const avgIV = avg(qualityPool, 'IV');
     const avgL  = avg(qualityPool, 'L');
     const avgA  = avg(qualityPool, 'a');
     const avgB  = avg(qualityPool, 'b');
+
+    const minIV = minVal(qualityPool, 'IV');
+    const minL  = minVal(qualityPool, 'L');
+    const minA  = minVal(qualityPool, 'a');
+    const minB  = minVal(qualityPool, 'b');
+
+    const maxIV = maxVal(qualityPool, 'IV');
+    const maxL  = maxVal(qualityPool, 'L');
+    const maxA  = maxVal(qualityPool, 'a');
+    const maxB  = maxVal(qualityPool, 'b');
 
     const qualSorted = [...qualityPool].sort((x,y) => {
       return new Date(x.ProdDate||x.proddate||x.DATE||x.date) - new Date(y.ProdDate||y.proddate||y.DATE||y.date);
@@ -1007,7 +1029,12 @@ async function runSearch() {
         agrade: aGrade / 100, wastePct: wastePct / 100,
         matBreakdown, addBreakdown
       },
-      quality: { avgIV, avgL, avgA, avgB },
+      quality: { 
+        avgIV, minIV, maxIV,
+        avgL,  minL,  maxL,
+        avgA,  minA,  maxA,
+        avgB,  minB,  maxB
+      },
       qualityTrend: { labels: trendLabels, iv: trendIV, l: trendL, a: trendA, b: trendB }
     };
 
@@ -1090,22 +1117,43 @@ function renderSearch(d, params) {
   `;
 
   const fmtQ = v => v != null ? Number(v).toFixed(3) : '-';
+  
+  // Lấy Min/Max từ d.quality
+  const qualStats = {
+    avgIV: qual.avgIV, minIV: qual.minIV, maxIV: qual.maxIV,
+    avgL:  qual.avgL,  minL:  qual.minL,  maxL:  qual.maxL,
+    avgA:  qual.avgA,  minA:  qual.minA,  maxA:  qual.maxA,
+    avgB:  qual.avgB,  minB:  qual.minB,  maxB:  qual.maxB
+  };
+
   document.getElementById('s-quality-cards').innerHTML = `
     <div class="metric-card">
       <div class="metric-label">IV (avg)</div>
-      <div class="metric-value v-accent">${fmtQ(qual.avgIV)}</div>
+      <div class="metric-value v-accent">${fmtQ(qualStats.avgIV)}</div>
+      <div class="metric-unit" style="font-size:10px;color:var(--muted);margin-top:6px;">
+        ${fmtQ(qualStats.minIV)} ~ ${fmtQ(qualStats.maxIV)}
+      </div>
     </div>
     <div class="metric-card">
       <div class="metric-label">L* (avg)</div>
-      <div class="metric-value v-accent2">${fmtQ(qual.avgL)}</div>
+      <div class="metric-value v-accent2">${fmtQ(qualStats.avgL)}</div>
+      <div class="metric-unit" style="font-size:10px;color:var(--muted);margin-top:6px;">
+        ${fmtQ(qualStats.minL)} ~ ${fmtQ(qualStats.maxL)}
+      </div>
     </div>
     <div class="metric-card">
       <div class="metric-label">a* (avg)</div>
-      <div class="metric-value">${fmtQ(qual.avgA)}</div>
+      <div class="metric-value">${fmtQ(qualStats.avgA)}</div>
+      <div class="metric-unit" style="font-size:10px;color:var(--muted);margin-top:6px;">
+        ${fmtQ(qualStats.minA)} ~ ${fmtQ(qualStats.maxA)}
+      </div>
     </div>
     <div class="metric-card">
       <div class="metric-label">b* (avg)</div>
-      <div class="metric-value">${fmtQ(qual.avgB)}</div>
+      <div class="metric-value">${fmtQ(qualStats.avgB)}</div>
+      <div class="metric-unit" style="font-size:10px;color:var(--muted);margin-top:6px;">
+        ${fmtQ(qualStats.minB)} ~ ${fmtQ(qualStats.maxB)}
+      </div>
     </div>
   `;
 
@@ -1117,6 +1165,7 @@ function drawSearchCharts(d, aGrade, wastePct) {
   searchCharts = {};
 
   const prod = d.production;
+  const qual = d.quality || {};
   const trend = d.qualityTrend || {};
 
   const pieOpts = (title) => ({
@@ -1199,6 +1248,55 @@ function drawSearchCharts(d, aGrade, wastePct) {
     }
   });
 
+  // Plugin để vẽ đường ngang AVG + Min/Max
+  const avgLinePlugin = {
+    id: 'avgLine',
+    afterDatasetsDraw(chart) {
+      const {ctx, scales:{y}, width} = chart;
+      if (!y) return;
+      
+      const avgVal = chart.avgValue;
+      const minVal = chart.minValue;
+      const maxVal = chart.maxValue;
+      
+      ctx.save();
+      
+      // Vẽ đường AVG
+      if (avgVal != null && !isNaN(avgVal)) {
+        const yPx = y.getPixelForValue(avgVal);
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, yPx);
+        ctx.lineTo(width, yPx);
+        ctx.stroke();
+        
+        // Label AVG
+        ctx.fillStyle = '#00e5ff';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText(`AVG: ${Number(avgVal).toFixed(3)}`, 8, yPx - 6);
+      }
+      
+      // Vẽ Min/Max labels
+      if (minVal != null && !isNaN(minVal)) {
+        const minPx = y.getPixelForValue(minVal);
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
+        ctx.font = '10px monospace';
+        ctx.fillText(`MIN: ${Number(minVal).toFixed(3)}`, 8, minPx + 12);
+      }
+      
+      if (maxVal != null && !isNaN(maxVal)) {
+        const maxPx = y.getPixelForValue(maxVal);
+        ctx.fillStyle = 'rgba(255, 69, 96, 0.8)';
+        ctx.font = '10px monospace';
+        ctx.fillText(`MAX: ${Number(maxVal).toFixed(3)}`, 8, maxPx - 4);
+      }
+      
+      ctx.restore();
+    }
+  };
+
   // Chỉnh sửa để hiển thị đủ tên phần tử tại trục X (display: true và autoSkip: false)
   const trendScaleOpts = {
     x:{ display: true, ticks: { color: '#6b7a8d', font: { size: 10 }, autoSkip: false, maxRotation: 45, minRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
@@ -1212,24 +1310,34 @@ function drawSearchCharts(d, aGrade, wastePct) {
   });
 
   const trendDatasets = [
-    { canvasId:'s-chart-iv', data: trend.iv, color:'#00e5ff' },
-    { canvasId:'s-chart-l',  data: trend.l,  color:'#00ff9c' },
-    { canvasId:'s-chart-a',  data: trend.a,  color:'#fbbf24' },
-    { canvasId:'s-chart-b',  data: trend.b,  color:'#a78bfa' },
+    { canvasId:'s-chart-iv', data: trend.iv, color:'#00e5ff', avg: qual.avgIV, min: qual.minIV, max: qual.maxIV },
+    { canvasId:'s-chart-l',  data: trend.l,  color:'#00ff9c', avg: qual.avgL,  min: qual.minL,  max: qual.maxL },
+    { canvasId:'s-chart-a',  data: trend.a,  color:'#fbbf24', avg: qual.avgA,  min: qual.minA,  max: qual.maxA },
+    { canvasId:'s-chart-b',  data: trend.b,  color:'#a78bfa', avg: qual.avgB,  min: qual.minB,  max: qual.maxB },
   ];
 
-  trendDatasets.forEach(({ canvasId, data: tData, color }) => {
+  trendDatasets.forEach(({ canvasId, data: tData, color, avg, min, max }) => {
     const labels = trend.labels || [];
     if (!tData || !tData.length || tData.every(v => v == null)) return;
-    searchCharts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
+    
+    const chartInstance = new Chart(document.getElementById(canvasId).getContext('2d'), {
       type:'line',
       data:{
         labels,
         datasets:[{ data: tData, borderColor: color, backgroundColor: color+'18',
           tension:0.3, fill:true, spanGaps:true }]
       },
-      options: trendOpts(color)
+      options: trendOpts(color),
+      plugins: [avgLinePlugin]
     });
+    
+    // Lưu avg/min/max để plugin sử dụng
+    chartInstance.avgValue = avg;
+    chartInstance.minValue = min;
+    chartInstance.maxValue = max;
+    chartInstance.update();
+    
+    searchCharts[canvasId] = chartInstance;
   });
 }
 
@@ -1333,19 +1441,137 @@ function renderHistory() {
 function exportHistory() {
   const hist = getHistory();
   if (!hist.length) { alert('No history to export'); return; }
-  const hdrs = ['Saved At','Note','Line','Product','Start Date','Start Shift','End Date','End Shift',
-    'Q (kg)','UQ (kg)','Waste (kg)', 'A-grade (%)','Waste (%)'];
+  
+  // Helper: Format số với dấu phẩy (12345.2 → 12,345.2)
+  const fmtNum = (v, dec = 2) => {
+    if (v == null || isNaN(v)) return '';
+    const num = Number(v);
+    return num.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  };
+  
+  // Helper: Format % (0.85 → 85.00%)
+  const fmtPct = (v) => {
+    if (v == null || isNaN(v)) return '';
+    const pct = Number(v) * 100;
+    return pct.toFixed(2) + '%';
+  };
+  
+  // Tạo header
+  const hdrs = [
+    'Saved At', 'Note', 'Line', 'Product', 'Start Date', 'Start Shift', 'End Date', 'End Shift',
+    // Production - Basic
+    'Material (kg)', 'Additives (kg)', 'Qualified (kg)', 'UnQualified (kg)', 'Waste (kg)',
+    'Input (kg)', 'Output (kg)', 'Throughput (kg/h)',
+    // Production - KPI
+    'A-Grade (%)', 'Waste (%)', 'Efficiency (%)',
+    // Material Composition (top 5)
+    'Material_1', 'Material_1_kg', 'Material_2', 'Material_2_kg', 'Material_3', 'Material_3_kg',
+    // Additives Composition (top 3)
+    'Additive_1', 'Additive_1_kg', 'Additive_2', 'Additive_2_kg',
+    // Quality - IV
+    'IV_Avg', 'IV_Min', 'IV_Max',
+    // Quality - L
+    'L_Avg', 'L_Min', 'L_Max',
+    // Quality - a
+    'a_Avg', 'a_Min', 'a_Max',
+    // Quality - b
+    'b_Avg', 'b_Min', 'b_Max'
+  ];
+  
   const rows = [hdrs.join(';')];
+  
   hist.forEach(e => {
     const p = e.data.production || e.data;
-    rows.push([
-      e.savedAt, (e.note||'').replace(/;/g,' '),
-      e.params.line, e.params.productCode||'All',
-      e.params.startDate, e.params.startShift, e.params.endDate, e.params.endShift,
-      Number(p.qualified||p.q||0).toFixed(2), Number(p.unqualified||p.uq||0).toFixed(2), Number(p.waste||0).toFixed(2),
-      (Number(p.agrade||0)*100).toFixed(2), (Number(p.wastePct||p.wastePercent||0)*100).toFixed(2)
-    ].join(';'));
+    const q = e.data.quality || {};
+    const mat = p.matBreakdown || {};
+    const add = p.addBreakdown || {};
+    
+    // Sắp xếp Material breakdown và lấy top 3
+    const matEntries = Object.entries(mat)
+      .filter(([k, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+    
+    // Sắp xếp Additives breakdown và lấy top 2
+    const addEntries = Object.entries(add)
+      .filter(([k, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2);
+    
+    // Basic info
+    const row = [
+      e.savedAt,
+      (e.note||'').replace(/;/g,' '),
+      e.params.line,
+      e.params.productCode||'All',
+      e.params.startDate,
+      e.params.startShift,
+      e.params.endDate,
+      e.params.endShift
+    ];
+    
+    // Production - Basic
+    row.push(fmtNum(p.material, 2));
+    row.push(fmtNum(p.additives, 2));
+    row.push(fmtNum(p.qualified, 2));
+    row.push(fmtNum(p.unqualified, 2));
+    row.push(fmtNum(p.waste, 2));
+    row.push(fmtNum(p.input, 2));
+    row.push(fmtNum(p.output, 2));
+    row.push(fmtNum(p.throughput, 2));
+    
+    // Production - KPI
+    const aGrade = Number(p.agrade||0) * 100;
+    const wastePct = Number(p.wastePct||0) * 100;
+    row.push((aGrade).toFixed(2) + '%');
+    row.push((wastePct).toFixed(2) + '%');
+    row.push(fmtNum(p.efficiency, 2) + (p.efficiency ? '%' : ''));
+    
+    // Material Composition (top 3 + value)
+    for (let i = 0; i < 3; i++) {
+      if (i < matEntries.length) {
+        row.push(matEntries[i][0]); // Material name
+        row.push(fmtNum(matEntries[i][1], 2)); // Material value
+      } else {
+        row.push('');
+        row.push('');
+      }
+    }
+    
+    // Additives Composition (top 2 + value)
+    for (let i = 0; i < 2; i++) {
+      if (i < addEntries.length) {
+        row.push(addEntries[i][0]); // Additive name
+        row.push(fmtNum(addEntries[i][1], 2)); // Additive value
+      } else {
+        row.push('');
+        row.push('');
+      }
+    }
+    
+    // Quality - IV (Avg, Min, Max)
+    row.push(fmtNum(q.avgIV, 3));
+    row.push(fmtNum(q.minIV, 3));
+    row.push(fmtNum(q.maxIV, 3));
+    
+    // Quality - L (Avg, Min, Max)
+    row.push(fmtNum(q.avgL, 3));
+    row.push(fmtNum(q.minL, 3));
+    row.push(fmtNum(q.maxL, 3));
+    
+    // Quality - a (Avg, Min, Max)
+    row.push(fmtNum(q.avgA, 3));
+    row.push(fmtNum(q.minA, 3));
+    row.push(fmtNum(q.maxA, 3));
+    
+    // Quality - b (Avg, Min, Max)
+    row.push(fmtNum(q.avgB, 3));
+    row.push(fmtNum(q.minB, 3));
+    row.push(fmtNum(q.maxB, 3));
+    
+    rows.push(row.join(';'));
   });
+  
   const blob = new Blob(['\uFEFF'+rows.join('\r\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
