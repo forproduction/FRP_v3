@@ -95,6 +95,13 @@ input,select,button{font-family:var(--sans);}
   gap:6px;
 }
 .btn-refresh:hover{color:var(--accent);border-color:var(--accent);}
+.lang-switch{
+  background:transparent;color:var(--muted);border:1px solid var(--border);
+  padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;
+  display:inline-flex;align-items:center;gap:6px;font-weight:600;
+}
+.lang-switch:hover{color:var(--accent);border-color:var(--accent);}
+.lang-switch.active{background:rgba(0,229,255,0.1);color:var(--accent);border-color:var(--accent);}
 #loading-bar{
   position:fixed;top:0;left:0;height:2px;width:0%;
   background:linear-gradient(90deg,var(--accent),var(--accent2));
@@ -139,6 +146,52 @@ input,select,button{font-family:var(--sans);}
 .v-accent2{color:var(--accent2);}
 .v-danger{color:var(--danger);}
 .v-warn{color:var(--warn);}
+
+/* ===== GROUPED PRODUCTION METRICS ===== */
+.prod-metrics-wrapper{margin-bottom:24px;}
+.prod-group{
+  margin-bottom:20px;
+  padding:16px;
+  border-radius:12px;
+  border-left:4px solid;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+}
+.prod-group-title{
+  font-size:12px;font-weight:700;letter-spacing:2px;
+  color:#fff;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.prod-group-title-icon{font-size:18px;}
+.prod-group-input{
+  border-left-color:rgba(0,229,255,0.6);
+  background:linear-gradient(135deg, rgba(0,229,255,0.06) 0%, rgba(0,229,255,0.02) 100%);
+}
+.prod-group-output{
+  border-left-color:rgba(0,255,156,0.6);
+  background:linear-gradient(135deg, rgba(0,255,156,0.06) 0%, rgba(0,255,156,0.02) 100%);
+}
+.prod-group-kpi{
+  border-left-color:rgba(251,191,36,0.6);
+  background:linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(251,191,36,0.02) 100%);
+}
+.prod-metrics-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+}
+.prod-metric-card{
+  background:rgba(15,21,32,0.7);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:14px;
+  position:relative;overflow:hidden;
+}
+.prod-metric-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+  opacity:0.3;
+}
+.prod-metric-label{font-size:9px;letter-spacing:1.5px;color:var(--muted);font-weight:600;margin-bottom:8px;text-transform:uppercase;}
+.prod-metric-value{font-size:20px;font-weight:700;font-family:var(--mono);}
+.prod-metric-unit{font-size:10px;color:var(--muted);margin-top:2px;}
 
 /* ===== CONTROL PANEL ===== */
 .ctrl-panel{
@@ -314,13 +367,32 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 <nav id="topnav">
   <div class="nav-brand">FRP</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchView('v-dashboard',this)">📊 Dashboard 2026</button>
-    <button class="nav-tab" onclick="switchView('v-search',this)">🔍 Search</button>
-    <button class="nav-tab" onclick="switchView('v-detail',this)">🔬 More Detail</button>
+   <button class="nav-tab active"
+        onclick="switchView('v-dashboard',this)"
+        data-i18n="dashboard2026">
+  <span class="tab-icon">📊</span>
+  <span class="tab-text">Dashboard 2026</span>
+</button>
+
+<button class="nav-tab"
+        onclick="switchView('v-search',this)"
+        data-i18n="search">
+  <span class="tab-icon">🔍</span>
+  <span class="tab-text">Search</span>
+</button>
+
+<button class="nav-tab"
+        onclick="switchView('v-detail',this)"
+        data-i18n="moreDetail">
+  <span class="tab-icon">🔬</span>
+  <span class="tab-text">More Detail</span>
+</button>
   </div>
   <div class="nav-right">
     <span id="data-status" style="font-size:11px;color:var(--muted);"></span>
-    <button class="btn-refresh" onclick="refreshDashboard()">↺ Refresh Data</button>
+    <button class="lang-switch active" id="lang-en" onclick="switchLanguage('en', this)">EN</button>
+    <button class="lang-switch" id="lang-tw" onclick="switchLanguage('tw', this)">繁中</button>
+    <button class="btn-refresh" onclick="refreshDashboard()" data-i18n="refreshData">↺ Refresh Data</button>
   </div>
 </nav>
 
@@ -328,11 +400,11 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   <div class="wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
       <div>
-        <div style="font-size:24px;font-weight:800;letter-spacing:2px;">DASHBOARD <span style="color:var(--accent);">2026</span></div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:2px;"><span data-i18n="dashboard2026">DASHBOARD 2026</span></div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="dash-update-info">Fetching data...</div>
       </div>
       <div class="sub-tabs" id="dash-product-tabs">
-        <button class="sub-tab active" onclick="switchDashProduct('total',this)">TOTAL</button>
+        <button class="sub-tab active" onclick="switchDashProduct('total',this)" data-i18n="total">TOTAL</button>
         <button class="sub-tab" onclick="switchDashProduct('v04',this)">CFF-V04</button>
         <button class="sub-tab" onclick="switchDashProduct('v05',this)">CFF-V05</button>
         <button class="sub-tab" onclick="switchDashProduct('v0302',this)">CFF-V03-02</button>
@@ -346,29 +418,29 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         <table id="dash-table">
           <thead>
               <tr>
-              <th style="text-align:left;">MONTH</th>
-              <th>Qualified (kg)</th>
-              <th>UnQualified (kg)</th>
-              <th>Total Product (kg)</th>
-              <th>A Grade (%)</th>
-              <th>Total Waste (kg)</th>
-              <th>Waste (%)</th>
+              <th style="text-align:left;" data-i18n="month">MONTH</th>
+              <th data-i18n="qualified">Qualified (kg)</th>
+              <th data-i18n="unqualified">UnQualified (kg)</th>
+              <th data-i18n="totalProduct">Total Product (kg)</th>
+              <th data-i18n="aGrade">A Grade (%)</th>
+              <th data-i18n="totalWaste">Total Waste (kg)</th>
+              <th data-i18n="waste">Waste (%)</th>
               </tr>
           </thead>
           <tbody id="dash-tbody">
             <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">
-              <span class="loading-spinner"></span>Loading data...</td></tr>
+              <span class="loading-spinner"></span><span data-i18n="fetchingData">Loading data...</span></td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="charts-grid" id="dash-charts" style="display:none;">
         <div class="chart-box">
-          <div class="chart-title">PRODUCTION VOLUME TREND (kg)</div>
+          <div class="chart-title" data-i18n="productionVolume">PRODUCTION VOLUME TREND (kg)</div>
           <div class="chart-canvas-wrap"><canvas id="dash-chart-1"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">A-GRADE & WASTE % TREND</div>
+          <div class="chart-title" data-i18n="gradeWasteTrend">A-GRADE & WASTE % TREND</div>
           <div class="chart-canvas-wrap"><canvas id="dash-chart-2"></canvas></div>
         </div>
       </div>
@@ -381,7 +453,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 
     <div class="ctrl-panel">
       <div class="ctrl-group">
-        <div class="ctrl-label">START DATE</div>
+        <div class="ctrl-label" data-i18n="startDate">START DATE</div>
         <div class="ctrl-row">
           <input type="date" id="s-start">
           <select id="s-shift1">
@@ -394,7 +466,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </div>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">END DATE</div>
+        <div class="ctrl-label" data-i18n="endDate">END DATE</div>
         <div class="ctrl-row">
           <input type="date" id="s-end">
           <select id="s-shift2">
@@ -407,17 +479,17 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </div>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">LINE</div>
+        <div class="ctrl-label" data-i18n="line">LINE</div>
         <select id="s-line">
-          <option value="All">All Lines</option>
+          <option value="All" data-i18n="allLines">All Lines</option>
           <option value="NGR">NGR (V1)</option>
           <option value="STA">STA (V2)</option>
         </select>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">PRODUCT CODE</div>
+        <div class="ctrl-label" data-i18n="productCode">PRODUCT CODE</div>
         <select id="s-product">
-          <option value="All">All Products</option>
+          <option value="All" data-i18n="allProducts">All Products</option>
           <option value="CFF-V04">CFF-V04</option>
           <option value="CFF-V05">CFF-V05</option>
           <option value="CFF-V03-02">CFF-V03-02</option>
@@ -425,55 +497,59 @@ tbody tr.total-row td:first-child{color:var(--warn);}
           <option value="CFF-V10">CFF-V10</option>
         </select>
       </div>
-      <button class="btn-calc" id="s-calc-btn" onclick="runSearch()">▶ Calculate</button>
+      <button class="btn-calc" id="s-calc-btn" onclick="runSearch()" data-i18n="calculate">▶ Calculate</button>
     </div>
 
     <div id="s-production-section" style="display:none;">
-      <div class="section-title">PRODUCTION</div>
-      <div class="metrics-grid" id="s-prod-cards"></div>
+      <div class="section-title" data-i18n="production">PRODUCTION</div>
+      <div class="prod-metrics-wrapper" id="s-prod-cards"></div>
 
       <div class="save-bar" id="s-save-bar">
-        <span style="font-size:12px;color:var(--muted2);white-space:nowrap;">Save result:</span>
+        <span style="font-size:12px;color:var(--muted2);white-space:nowrap;" data-i18n="saveResult">Save result:</span>
         <input type="text" id="s-note" placeholder="Note (optional)...">
-        <button class="btn-sm btn-save" onclick="saveSearchResult()">💾 Save</button>
-        <button class="btn-sm btn-skip" onclick="closeSaveBar()">Skip</button>
+        <button class="btn-sm btn-save" onclick="saveSearchResult()" data-i18n="save">💾 Save</button>
+        <button class="btn-sm btn-skip" onclick="closeSaveBar()" data-i18n="skip">Skip</button>
       </div>
 
-      <div class="section-title">BREAKDOWN</div>
+      <div class="section-title" data-i18n="breakdown">BREAKDOWN</div>
       <div class="charts-grid" id="s-charts-1">
         <div class="chart-box">
-          <div class="chart-title">MATERIAL COMPOSITION</div>
+          <div class="chart-title" data-i18n="materialComposition">MATERIAL COMPOSITION</div>
           <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-mat-pie"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">ADDITIVES COMPOSITION</div>
+          <div class="chart-title" data-i18n="additivesComposition">ADDITIVES COMPOSITION</div>
           <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-add-pie"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">KEY PERFORMANCE INDICATORS</div>
+          <div class="chart-title" data-i18n="inputOutputBalance">INPUT vs OUTPUT BALANCE</div>
+          <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-input-output-bar"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title" data-i18n="kpi">KEY PERFORMANCE INDICATORS</div>
           <div class="chart-canvas-wrap" style="height:240px;"><canvas id="s-kpi-bar"></canvas></div>
         </div>
       </div>
 
-      <div class="section-title">QUALITY AVERAGES</div>
+      <div class="section-title" data-i18n="qualityAverages">QUALITY AVERAGES</div>
       <div class="quality-cards" id="s-quality-cards"></div>
 
-      <div class="section-title">QUALITY TREND (per sample)</div>
+      <div class="section-title" data-i18n="qualityTrend">QUALITY TREND (per sample)</div>
       <div class="charts-grid-4" id="s-quality-charts">
         <div class="chart-box">
-          <div class="chart-title">IV TREND</div>
+          <div class="chart-title" data-i18n="ivTrend">IV TREND</div>
           <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-iv"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">L* TREND</div>
+          <div class="chart-title" data-i18n="lTrend">L* TREND</div>
           <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-l"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">a* TREND</div>
+          <div class="chart-title" data-i18n="aTrend">a* TREND</div>
           <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-a"></canvas></div>
         </div>
         <div class="chart-box">
-          <div class="chart-title">b* TREND</div>
+          <div class="chart-title" data-i18n="bTrend">b* TREND</div>
           <div class="chart-canvas-wrap" style="height:260px;"><canvas id="s-chart-b"></canvas></div>
         </div>
       </div>
@@ -481,14 +557,14 @@ tbody tr.total-row td:first-child{color:var(--warn);}
 
     <div class="history-section">
       <div class="history-hdr">
-        <div class="history-title">SEARCH HISTORY <span class="badge" id="hist-count">0</span></div>
+        <div class="history-title" data-i18n="searchHistory">SEARCH HISTORY <span class="badge" id="hist-count">0</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" class="admin-only" id="hist-actions" style="display:none!important;">
-          <button class="btn-sm btn-export" onclick="exportHistory()">⬇ Export CSV</button>
-          <button class="btn-sm btn-danger" onclick="clearHistory()">🗑 Clear All</button>
+          <button class="btn-sm btn-export" onclick="exportHistory()" data-i18n="exportCsv">⬇ Export CSV</button>
+          <button class="btn-sm btn-danger" onclick="clearHistory()" data-i18n="clearAll">Clear All</button>
         </div>
       </div>
       <div class="table-wrap" style="min-height:60px;">
-        <div id="hist-container"><div class="empty-msg">No saved searches yet.</div></div>
+        <div id="hist-container"><div class="empty-msg" data-i18n="noSearches">No saved searches yet.</div></div>
       </div>
     </div>
 
@@ -499,12 +575,12 @@ tbody tr.total-row td:first-child{color:var(--warn);}
   <div class="wrap">
 
     <div style="font-size:20px;font-weight:800;letter-spacing:2px;margin-bottom:20px;">
-      MORE <span style="color:var(--accent);">DETAIL</span>
+      <span data-i18n="moreDetail">MORE</span> <span style="color:var(--accent);">DETAIL</span>
     </div>
 
     <div class="ctrl-panel">
       <div class="ctrl-group">
-        <div class="ctrl-label">START DATE</div>
+        <div class="ctrl-label" data-i18n="startDate">START DATE</div>
         <div class="ctrl-row">
           <input type="date" id="d-start">
           <select id="d-shift1">
@@ -517,7 +593,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </div>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">END DATE</div>
+        <div class="ctrl-label" data-i18n="endDate">END DATE</div>
         <div class="ctrl-row">
           <input type="date" id="d-end">
           <select id="d-shift2">
@@ -530,17 +606,17 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </div>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">LINE</div>
+        <div class="ctrl-label" data-i18n="line">LINE</div>
         <select id="d-line">
-          <option value="All">All Lines</option>
+          <option value="All" data-i18n="allLines">All Lines</option>
           <option value="NGR">NGR (V1)</option>
           <option value="STA">STA (V2)</option>
         </select>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">PRODUCT CODE</div>
+        <div class="ctrl-label" data-i18n="productCode">PRODUCT CODE</div>
         <select id="d-product">
-          <option value="All">All Products</option>
+          <option value="All" data-i18n="allProducts">All Products</option>
           <option value="CFF-V04">CFF-V04</option>
           <option value="CFF-V05">CFF-V05</option>
           <option value="CFF-V03-02">CFF-V03-02</option>
@@ -549,7 +625,7 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </select>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">TYPE</div>
+        <div class="ctrl-label" data-i18n="type">TYPE</div>
         <select id="d-type" onchange="updateDetailGroups()">
           <option value="">-- Select --</option>
           <option value="C">C (Count/bags)</option>
@@ -558,18 +634,18 @@ tbody tr.total-row td:first-child{color:var(--warn);}
         </select>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">GROUP</div>
+        <div class="ctrl-label" data-i18n="group">GROUP</div>
         <select id="d-group" onchange="updateDetailNames()">
           <option value="">-- Select --</option>
         </select>
       </div>
       <div class="ctrl-group">
-        <div class="ctrl-label">NAME</div>
+        <div class="ctrl-label" data-i18n="name">NAME</div>
         <select id="d-name">
           <option value="All">All</option>
         </select>
       </div>
-      <button class="btn-calc" id="d-calc-btn" onclick="runDetail()">▶ Calculate</button>
+      <button class="btn-calc" id="d-calc-btn" onclick="runDetail()" data-i18n="calculate">▶ Calculate</button>
     </div>
 
     <div class="detail-result" id="detail-result">
@@ -652,6 +728,274 @@ const PALETTE = ['#00e5ff','#00ff9c','#fbbf24','#ff4560','#a78bfa','#34d399','#f
 const PALETTE2 = ['#00ff9c','#fbbf24']; 
 
 // ===================================================================
+// LANGUAGE TRANSLATIONS
+// ===================================================================
+let currentLang = localStorage.getItem('frpLang') || 'en';
+
+const translations = {
+  en: {
+    // Nav & Main
+    dashboard: 'Dashboard',
+    dashboard2026: 'Dashboard 2026',
+    search: 'Search',
+    moreDetail: 'More Detail',
+    refreshData: 'Refresh Data',
+    
+    // Dashboard
+    month: 'MONTH',
+    qualified: 'Qualified (kg)',
+    unqualified: 'UnQualified (kg)',
+    totalProduct: 'Total Product (kg)',
+    aGrade: 'A Grade (%)',
+    totalWaste: 'Total Waste (kg)',
+    waste: 'Waste (%)',
+    total: 'TOTAL',
+    productionVolume: 'PRODUCTION VOLUME TREND (kg)',
+    gradeWasteTrend: 'A-GRADE & WASTE % TREND',
+    
+    // Search Control Labels
+    startDate: 'START DATE',
+    endDate: 'END DATE',
+    line: 'LINE',
+    productCode: 'PRODUCT CODE',
+    calculate: 'Calculate',
+    allLines: 'All Lines',
+    allProducts: 'All Products',
+    allShifts: 'All Shifts',
+    
+    // Production Group Titles
+    production: 'PRODUCTION',
+    inputMaterials: 'INPUT MATERIALS',
+    material: 'MATERIAL',
+    additives: 'ADDITIVES',
+    input: 'INPUT',
+    outputQuality: 'OUTPUT & QUALITY',
+    qualified_prod: 'QUALIFIED',
+    unqualifiedProd: 'UNQUALIFIED',
+    wasteLabel: 'WASTE',
+    output: 'OUTPUT',
+    performanceKpi: 'PERFORMANCE KPI',
+    throughput: 'THROUGHPUT',
+    aGradeLabel: 'A-GRADE',
+    wastePercent: 'WASTE %',
+    efficiency: 'EFFICIENCY',
+    
+    // Save & Actions
+    saveResult: 'Save result:',
+    save: 'Save',
+    skip: 'Skip',
+    
+    // Breakdown
+    breakdown: 'BREAKDOWN',
+    materialComposition: 'MATERIAL COMPOSITION',
+    additivesComposition: 'ADDITIVES COMPOSITION',
+    inputOutputBalance: 'INPUT vs OUTPUT BALANCE',
+    kpi: 'KEY PERFORMANCE INDICATORS',
+    
+    // Quality
+    qualityAverages: 'QUALITY AVERAGES',
+    qualityTrend: 'QUALITY TREND (per sample)',
+    ivTrend: 'IV TREND',
+    lTrend: 'L* TREND',
+    aTrend: 'a* TREND',
+    bTrend: 'b* TREND',
+    ivAvg: 'IV (avg)',
+    lAvg: 'L* (avg)',
+    aAvg: 'a* (avg)',
+    bAvg: 'b* (avg)',
+    
+    // Search History
+    searchHistory: 'SEARCH HISTORY',
+    exportCsv: 'Export CSV',
+    clearAll: '🗑 Clear All',
+    saved: 'Saved',
+    note: 'Note',
+    start: 'Start',
+    end: 'End',
+    actions: 'Actions',
+    load: 'Load',
+    noSearches: 'No saved searches yet.',
+    
+    // More Detail
+    moreDetail: 'MORE',
+    type: 'TYPE',
+    group: 'GROUP',
+    name: 'NAME',
+    
+    // Messages
+    fetchingData: 'Loading data...',
+    lastUpdated: 'Last updated:',
+    cached: 'cached',
+    live: 'live',
+    failedLoad: 'Failed to load data. Check network or API.',
+    loadFailed: 'Load failed'
+  },
+tw: {
+    // Nav & Main
+    dashboard: '儀表板',
+    dashboard2026: '2026 儀表板',
+    search: '搜尋',
+    moreDetail: '更多細節',
+    refreshData: '更新資料',
+
+// Dashboard
+    month: '月份',
+    qualified: '良品 (kg)',
+    unqualified: '不良品 (kg)',
+    totalProduct: '總產量 (kg)',
+    aGrade: 'A級率 (%)',
+    totalWaste: '總廢料 (kg)',
+    waste: '廢料率 (%)',
+    total: '總計',
+    productionVolume: '產量趨勢 (kg)',
+    gradeWasteTrend: 'A級品與廢料率趨勢',
+    
+// Search Control Labels
+    startDate: '開始日期',
+    endDate: '結束日期',
+    line: '生產線',
+    productCode: '產品代碼',
+    calculate: '計算',
+    allLines: '所有產線',
+    allProducts: '所有產品',
+    allShifts: '所有班次',
+    
+// Production Group Titles
+    production: '生產',
+    inputMaterials: '投入原料',
+    material: '材料',
+    additives: '添加劑',
+    input: '投入',
+    outputQuality: '產出與品質',
+    qualified_prod: '良品',
+    unqualifiedProd: '不良品',
+    wasteLabel: '廢料',
+    output: '產出',
+    performanceKpi: '績效指標',
+    throughput: '產能 / 產出率',
+    aGradeLabel: 'A級品',
+    wastePercent: '廢料率 %',
+    efficiency: '效率',
+    
+// Save & Actions
+    saveResult: '儲存結果：',
+    save: '儲存',
+    skip: '略過',
+    
+// Breakdown
+    breakdown: '數據明細',
+    materialComposition: '材料組成',
+    additivesComposition: '添加劑組成',
+    inputOutputBalance: '投入與產出平衡',
+    kpi: '關鍵績效指標 (KPI)',
+    
+// Quality
+    qualityAverages: '品質平均值',
+    qualityTrend: '品質趨勢 (每次抽樣)',
+    ivTrend: 'IV 趨勢',
+    lTrend: 'L* 趨勢',
+    aTrend: 'a* 趨勢',
+    bTrend: 'b* 趨勢',
+    ivAvg: 'IV (平均)',
+    lAvg: 'L* (平均)',
+    aAvg: 'a* (平均)',
+    bAvg: 'b* (平均)',
+    
+// Search History
+    searchHistory: '搜尋歷史',
+    exportCsv: '匯出 CSV',
+    clearAll: '🗑 清除全部',
+    saved: '已儲存',
+    note: '備註',
+    start: '開始',
+    end: '結束',
+    actions: '操作',
+    load: '載入',
+    noSearches: '尚無儲存的搜尋紀錄。',
+    
+    // More Detail
+    moreDetail: '更多',
+type: '類型',
+    group: '類別',
+    name: '名稱',
+    
+// Messages
+    fetchingData: '正在載入資料...',
+    lastUpdated: '最後更新：',
+    cached: '快取',
+    live: '即時',
+    failedLoad: '載入資料失敗。請檢查網路或 API 狀態。',
+    loadFailed: '載入失敗'
+  }
+};
+
+function t(key) {
+  return translations[currentLang][key] || translations['en'][key] || key;
+}
+
+function switchLanguage(lang, btn) {
+  currentLang = lang;
+  localStorage.setItem('frpLang', lang);
+  
+  document.querySelectorAll('.lang-switch').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  updatePageLanguage();
+
+  if (pendingSave && pendingSave.data && pendingSave.params) {
+    renderSearch(pendingSave.data, pendingSave.params);
+  }
+
+  if (rawData.ngr || rawData.sta) {
+    renderDashboard();
+  }
+}
+
+function updatePageLanguage() {
+  // Update all elements with data-i18n attribute
+  document.querySelectorAll('[data-i18n]').forEach(elem => {
+    const key = elem.getAttribute('data-i18n');
+    const translatedText = t(key);
+    if (elem.tagName === 'OPTION') {
+      elem.textContent = translatedText;
+    } 
+else if (elem.classList.contains('nav-tab')) {
+
+    const textElem = elem.querySelector('.tab-text');
+
+    if(textElem){
+        textElem.textContent = translatedText;
+    }
+
+}
+    
+    else if (elem.classList.contains('btn-calc')) {
+
+      elem.innerHTML = `▶ ${translatedText.trim()}`;
+
+    }
+    else if (elem.classList.contains('btn-refresh')) {
+
+      elem.innerHTML = `↺ ${translatedText}`;
+
+    }
+    else if (elem.classList.contains('btn-save')) {
+
+      elem.innerHTML = `💾 ${translatedText}`;
+
+    }
+    else if (elem.classList.contains('btn-export')) {
+
+      elem.innerHTML = `⬇ ${translatedText}`;
+
+    }
+    else {
+      elem.textContent = translatedText;
+    }
+  });
+}
+
+// ===================================================================
 // FETCH DATA
 // ===================================================================
 async function loadDashboard() {
@@ -661,7 +1005,7 @@ async function loadDashboard() {
     try {
       rawData = JSON.parse(cached);
       renderDashboard();
-      document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date(Number(cacheTime)).toLocaleString() + ' (cached)';
+      document.getElementById('dash-update-info').innerText = `${t('lastUpdated')} ${new Date(Number(cacheTime)).toLocaleString()} (${t('cached')})`;
       return;
     } catch(e) {}
   }
@@ -670,7 +1014,7 @@ async function loadDashboard() {
 
 async function refreshDashboard() {
   setLoading(20);
-  document.getElementById('dash-update-info').innerHTML = '<span class="loading-spinner"></span>Fetching data...';
+  document.getElementById('dash-update-info').innerHTML = `<span class="loading-spinner"></span>${t('fetchingData')}`;
   try {
     const r = await fetch(API_URL);
     setLoading(70);
@@ -678,11 +1022,11 @@ async function refreshDashboard() {
     localStorage.setItem(CACHE_KEY, JSON.stringify(rawData));
     localStorage.setItem(CACHE_KEY + '_time', Date.now());
     renderDashboard();
-    document.getElementById('dash-update-info').innerText = 'Last updated: ' + new Date().toLocaleString() + ' (live)';
+    document.getElementById('dash-update-info').innerText = `${t('lastUpdated')} ${new Date().toLocaleString()} (${t('live')})`;
   } catch(err) {
     console.error(err);
-    document.getElementById('dash-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">Failed to load data. Check network or API.</td></tr>`;
-    document.getElementById('dash-update-info').innerText = 'Load failed';
+    document.getElementById('dash-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">${t('failedLoad')}</td></tr>`;
+    document.getElementById('dash-update-info').innerText = t('loadFailed');
   }
   setLoading(100);
 }
@@ -757,7 +1101,7 @@ function renderDashboard() {
     const wpClass = wp !== null && wp > 5.3 && t > 0 ? 'danger-cell' : 'ok-cell';
 
     tbody += `<tr>
-        <td>${MONTH_NAMES[m-1]}</td>
+        <td>${getMonthNames()[m-1]}</td>
         <td>${fmt(d.Q)}</td>
         <td>${fmt(d.UQ)}</td>
         <td>${fmt(t)}</td>
@@ -807,9 +1151,9 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
   dashCharts['dash-chart-1'] = new Chart(document.getElementById('dash-chart-1').getContext('2d'), {
     type:'line',
     data:{ labels, datasets:[
-      {label:'Qualified (kg)', data:q, borderColor:'#00ff9c', backgroundColor:'rgba(0,255,156,0.08)', tension:0.3, pointRadius:4, fill:true},
-      {label:'UnQualified (kg)', data:uq, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true},
-      {label:'Waste (kg)', data:waste, borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,0.08)', tension:0.3, pointRadius:4, fill:true}
+      {label:t('qualified'), data:q, borderColor:'#00ff9c', backgroundColor:'rgba(0,255,156,0.08)', tension:0.3, pointRadius:4, fill:true},
+      {label:t('unqualified'), data:uq, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true},
+      {label:t('totalWaste'), data:waste, borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,0.08)', tension:0.3, pointRadius:4, fill:true}
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#8a97a6',boxWidth:12}}},
@@ -818,8 +1162,8 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
   dashCharts['dash-chart-2'] = new Chart(document.getElementById('dash-chart-2').getContext('2d'), {
     type:'line',
     data:{ labels, datasets:[
-      {label:'A-grade (%)', data:ag, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true},
-      {label:'Waste (%)', data:wp, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true}
+      {label:t('aGrade'), data:ag, borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true},
+      {label:t('waste'), data:wp, borderColor:'#ff4560', backgroundColor:'rgba(255,69,96,0.08)', tension:0.3, pointRadius:4, fill:true, spanGaps:true}
     ]},
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#8a97a6',boxWidth:12}}},
@@ -827,7 +1171,11 @@ function drawDashCharts(labels, q, uq, waste, ag, wp) {
   });
 }
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getMonthNames() {
+  return currentLang === 'tw'
+    ? ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+    : ['January','February','March','April','May','June','July','August','September','October','November','December'];
+}
 
 // ===================================================================
 // SHIFT UTILS
@@ -880,7 +1228,7 @@ async function runSearch() {
 
   if (!params.startDate || !params.endDate) {
     alert('Please select start and end date!');
-    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    btn.disabled = false; btn.innerHTML = `▶ ${t('calculate')}`;
     setLoading(100);
     return;
   }
@@ -1014,7 +1362,12 @@ async function runSearch() {
     });
     const trendLabels = qualSorted.map(r => {
       const d = new Date(r.ProdDate||r.proddate||r.DATE||r.date);
-      return isNaN(d) ? '' : d.toLocaleDateString('vi-VN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      if (isNaN(d)) return '';
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      return `${hours}:${mins} ${day}-${month}`;
     });
     const trendIV = qualSorted.map(r => parseFloat(r['IV']) || null);
     const trendL  = qualSorted.map(r => parseFloat(r['L'])  || null);
@@ -1045,7 +1398,7 @@ async function runSearch() {
     document.getElementById('s-production-section').style.display = 'block';
 
     btn.disabled = false;
-    btn.innerHTML = '▶ Calculate';
+    btn.innerHTML = `▶ ${t('calculate')}`;
     setLoading(100);
   }, 100);
 }
@@ -1059,62 +1412,97 @@ function renderSearch(d, params) {
   const agClass = aGrade < 99 ? 'v-danger' : 'v-accent2';
   const wClass = wastePct > 5.3 ? 'v-danger' : 'v-accent2';
 
-  document.getElementById('s-prod-cards').innerHTML = `
-    <div class="metric-card">
-      <div class="metric-label">MATERIAL</div>
-      <div class="metric-value v-accent">${fmt(prod.material)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">ADDITIVES</div>
-      <div class="metric-value v-accent2">${fmt(prod.additives)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">QUALIFIED</div>
-      <div class="metric-value v-accent2">${fmt(prod.qualified)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">UNQUALIFIED</div>
-      <div class="metric-value v-danger">${fmt(prod.unqualified)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">WASTE</div>
-      <div class="metric-value v-warn">${fmt(prod.waste)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">INPUT</div>
-      <div class="metric-value">${fmt(prod.input)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">OUTPUT</div>
-      <div class="metric-value">${fmt(prod.output)}</div>
-      <div class="metric-unit">kg</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">THROUGHPUT</div>
-      <div class="metric-value v-accent">${prod.throughput != null ? prod.throughput.toFixed(2) : '-'}</div>
-      <div class="metric-unit">kg/h</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">A-GRADE</div>
-      <div class="metric-value ${agClass}">${aGrade.toFixed(2)}%</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">WASTE %</div>
-      <div class="metric-value ${wClass}">${wastePct.toFixed(2)}%</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">EFFICIENCY</div>
-      <div class="metric-value ${prod.efficiency < 95 ? 'v-danger' : 'v-accent2'}">
-        ${prod.efficiency ? prod.efficiency.toFixed(2) : '-'}%
+  // Nhóm 1: INPUT
+  const groupInput = `
+    <div class="prod-group prod-group-input">
+      <div class="prod-group-title">
+        <span class="prod-group-title-icon">📥</span>
+        <span>${t('inputMaterials')}</span>
+      </div>
+      <div class="prod-metrics-grid">
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('material')}</div>
+          <div class="prod-metric-value v-accent">${fmt(prod.material)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('additives')}</div>
+          <div class="prod-metric-value v-accent2">${fmt(prod.additives)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('input')}</div>
+          <div class="prod-metric-value">${fmt(prod.input)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
       </div>
     </div>
   `;
+
+  // Nhóm 2: OUTPUT
+  const groupOutput = `
+    <div class="prod-group prod-group-output">
+      <div class="prod-group-title">
+        <span class="prod-group-title-icon">📦</span>
+        <span>${t('outputQuality')}</span>
+      </div>
+      <div class="prod-metrics-grid">
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('qualified_prod')}</div>
+          <div class="prod-metric-value v-accent2">${fmt(prod.qualified)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('unqualifiedProd')}</div>
+          <div class="prod-metric-value v-danger">${fmt(prod.unqualified)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('wasteLabel')}</div>
+          <div class="prod-metric-value v-warn">${fmt(prod.waste)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('output')}</div>
+          <div class="prod-metric-value">${fmt(prod.output)}</div>
+          <div class="prod-metric-unit">kg</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Nhóm 3: KPI
+  const groupKPI = `
+    <div class="prod-group prod-group-kpi">
+      <div class="prod-group-title">
+        <span class="prod-group-title-icon">📊</span>
+        <span>${t('performanceKpi')}</span>
+      </div>
+      <div class="prod-metrics-grid">
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('throughput')}</div>
+          <div class="prod-metric-value v-accent">${prod.throughput != null ? prod.throughput.toFixed(2) : '-'}</div>
+          <div class="prod-metric-unit">kg/h</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('aGradeLabel')}</div>
+          <div class="prod-metric-value ${agClass}">${aGrade.toFixed(2)}%</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('wastePercent')}</div>
+          <div class="prod-metric-value ${wClass}">${wastePct.toFixed(2)}%</div>
+        </div>
+        <div class="prod-metric-card">
+          <div class="prod-metric-label">${t('efficiency')}</div>
+          <div class="prod-metric-value ${prod.efficiency < 95 ? 'v-danger' : 'v-accent2'}">
+            ${prod.efficiency ? prod.efficiency.toFixed(2) : '-'}%
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('s-prod-cards').innerHTML = groupInput + groupOutput + groupKPI;
 
   const fmtQ = v => v != null ? Number(v).toFixed(3) : '-';
   
@@ -1207,6 +1595,67 @@ function drawSearchCharts(d, aGrade, wastePct) {
     ctx.fillStyle = '#6b7a8d'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('No data', ctx.canvas.width/2, ctx.canvas.height/2);
   }
+
+  // Input vs Output Bar Chart
+  const inputVal = Number(prod.input) || 0;
+  const outputVal = Number(prod.output) || 0;
+  const efficiency = inputVal > 0 ? (outputVal / inputVal) * 100 : 0;
+  
+  const ioPlugin = {
+    id: 'ioLabel',
+    afterDatasetsDraw(chart) {
+      const {ctx, scales:{y}, data} = chart;
+      if (!y || !data.datasets[0].data) return;
+      ctx.save();
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${efficiency.toFixed(1)}%`, chart.getDatasetMeta(0).data[0].x, 20);
+      ctx.restore();
+    }
+  };
+
+  searchCharts.ioBar = new Chart(document.getElementById('s-input-output-bar').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['INPUT', 'OUTPUT'],
+      datasets: [{
+        label: 'kg',
+        data: [inputVal, outputVal],
+        backgroundColor: ['rgba(0,229,255,0.4)', 'rgba(0,255,156,0.4)'],
+        borderColor: ['#00e5ff', '#00ff9c'],
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    plugins: [ioPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#8a97a6' } },
+        tooltip: {
+          callbacks: {
+            afterLabel: ctx => {
+              if (ctx.dataIndex === 1) return `Efficiency: ${efficiency.toFixed(1)}%`;
+              return '';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#6b7a8d', callback: v => fmt(v) + ' kg' },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        x: {
+          ticks: { color: '#6b7a8d', font: { weight: 'bold', size: 12 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
 
   const targetPlugin = {
     id:'targetLines',
@@ -1650,14 +2099,14 @@ function runDetail() {
 
   if (!params.type || !params.group) {
     alert('Please select Type and Group!');
-    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    btn.disabled = false; btn.innerHTML = `▶ ${t('calculate')}`;
     setLoading(100);
     return;
   }
 
   if (!params.startDate || !params.endDate) {
     alert('Please select start and end date!');
-    btn.disabled = false; btn.innerHTML = '▶ Calculate';
+    btn.disabled = false; btn.innerHTML = `▶ ${t('calculate')}`;
     setLoading(100);
     return;
   }
@@ -1704,7 +2153,7 @@ function runDetail() {
     renderDetail(data, params);
 
     btn.disabled = false;
-    btn.innerHTML = '▶ Calculate';
+    btn.innerHTML = `▶ ${t('calculate')}`;
     setLoading(100);
   }, 100);
 }
@@ -1734,6 +2183,11 @@ function renderDetail(data, params) {
 // ===================================================================
 // INIT
 // ===================================================================
+// Initialize language buttons
+document.getElementById('lang-en').classList.toggle('active', currentLang === 'en');
+document.getElementById('lang-tw').classList.toggle('active', currentLang === 'tw');
+updatePageLanguage();
+
 renderHistory();
 
 const today = new Date();
