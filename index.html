@@ -478,7 +478,7 @@ html[data-theme="light"] .btn-skip:hover{color:var(--text);}
   <div class="login-box">
     <div class="login-logo">FRP</div>
     <div class="login-sub">PRODUCTION MONITORING SYSTEM</div>
-    <input type="password" id="pass-input" placeholder="••••" maxlength="10"
+    <input type="password" id="pass-input" placeholder="••••" maxlength="4"
       onkeydown="if(event.key==='Enter')checkLogin()">
     <br>
     <button class="login-btn" onclick="checkLogin()">ACCESS SYSTEM</button>
@@ -496,14 +496,14 @@ html[data-theme="light"] .btn-skip:hover{color:var(--text);}
   <span class="tab-text">Dashboard 2026</span>
 </button>
 
-<button class="nav-tab"
+<button class="nav-tab admin-only"
         onclick="switchView('v-search',this)"
         data-i18n="search">
   <span class="tab-icon">🔍</span>
   <span class="tab-text">Search</span>
 </button>
 
-<button class="nav-tab"
+<button class="nav-tab admin-only"
         onclick="switchView('v-detail',this)"
         data-i18n="moreDetail">
   <span class="tab-icon">🔬</span>
@@ -870,16 +870,23 @@ function checkLogin() {
   const overlay = document.getElementById('login-overlay');
   const error = document.getElementById('login-error');
   const nav = document.getElementById('topnav');
-
   if (pass === "4101") {
     overlay.style.display = "none";
     nav.style.display = "flex";
+    // Hiển thị lại tất cả các tính năng của Admin
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
     loadDashboard();
     startAutoRefresh();
   } else if (pass === "6840") {
     overlay.style.display = "none";
     nav.style.display = "flex";
+    // Ẩn tất cả các tab và tính năng có class admin-only
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    
+    // Đảm bảo view hiển thị mặc định quay về Dashboard 2026
+    const dashBtn = document.querySelector('.nav-tab[onclick*="v-dashboard"]');
+    if (dashBtn) switchView('v-dashboard', dashBtn);
+    
     loadDashboard();
     startAutoRefresh();
   } else {
